@@ -6,6 +6,7 @@ import MyProjects from './pages/MyProjects';
 import Matches from './pages/Matches';
 import CreateProject from './pages/CreateProject';
 import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import BottomNav from './components/BottomNav';
@@ -52,6 +53,7 @@ export default function App() {
                     <Route path="/matches" element={<Matches />} />
                     <Route path="/create" element={<CreateProject />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/:id" element={<PublicProfile />} />
                   </Routes>
                 </main>
                 <BottomNav />
