@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 export default function Matches() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function Matches() {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, full_name, tagline, roles')
+            .select('id, full_name, tagline, roles, avatar_url')
             .eq('id', otherId)
             .single();
 
@@ -83,10 +84,9 @@ export default function Matches() {
       <h1 style={s.heading}>Matchningar</h1>
       <div style={s.list}>
         {matches.map((match) => {
-          const name     = match.other.full_name || 'Okänd';
-          const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-          const tagline  = match.other.tagline || null;
-          const project  = match.projects?.title || null;
+          const name    = match.other.full_name || 'Okänd';
+          const tagline = match.other.tagline || null;
+          const project = match.projects?.title || null;
 
           return (
             <button
@@ -94,7 +94,7 @@ export default function Matches() {
               style={s.card}
               onClick={() => navigate(`/chat/${match.id}`)}
             >
-              <div style={s.avatar}>{initials}</div>
+              <Avatar avatarUrl={match.other.avatar_url} name={name} size={50} />
 
               <div style={s.info}>
                 <span style={s.name}>{name}</span>
@@ -153,19 +153,6 @@ const s = {
     cursor: 'pointer',
     textAlign: 'left',
     width: '100%',
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
   info: {
     flex: 1,
