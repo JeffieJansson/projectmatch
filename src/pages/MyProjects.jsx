@@ -1,3 +1,539 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
+const STAGE_LABEL = { idea: 'Idé', mvp: 'MVP', beta: 'Beta', growth: 'Tillväxt', scaling: 'Skalning' };
+const STAGE_COLOR = {
+  idea:    { bg: '#ede9fe', color: '#6d28d9' },
+  mvp:     { bg: '#dbeafe', color: '#1e40af' },
+  beta:    { bg: '#d1fae5', color: '#065f46' },
+  growth:  { bg: '#fef3c7', color: '#92400e' },
+  scaling: { bg: '#fee2e2', color: '#991b1b' },
+};
+
 export default function MyProjects() {
-  return <div>My Projects</div>;
+  const [tab, setTab]           = useState('projects'); // 'projects' | 'requests'
+  const [projects, setProjects] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [userId, setUserId]     = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [reqCount, setReqCount] = useState(0);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user.id);
+      await Promise.all([
+        loadProjects(user.id),
+        loadRequests(user.id),
+      ]);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function loadProjects(uid) {
+    const { data } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('creator_id', uid)
+      .order('created_at', { ascending: false });
+    setProjects(data || []);
+  }
+
+  async function loadRequests(uid) {
+    // Hämta alla projekt som tillhör användaren
+    const { data: myProjects } = await supabase
+      .from('projects')
+      .select('id, title')
+      .eq('creator_id', uid);
+
+    if (!myProjects || myProjects.length === 0) {
+      setRequests([]);
+      setReqCount(0);
+      return;
+    }
+
+    const projectIds = myProjects.map((p) => p.id);
+    const projectMap = Object.fromEntries(myProjects.map((p) => [p.id, p.title]));
+
+    // Hämta interests + join med profiles (bara safe fält)
+    const { data: interests } = await supabase
+      .from('interests')
+      .select('id, user_id, project_id, created_at, profiles(full_name, tagline, roles)')
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: false });
+
+    const enriched = (interests || []).map((r) => ({
+      ...r,
+      projectTitle: projectMap[r.project_id] || 'Okänt projekt',
+    }));
+
+    setRequests(enriched);
+    setReqCount(enriched.length);
+  }
+
+  async function handleMatch(interest) {
+    // Skapa rad i matches
+    await supabase.from('matches').insert({
+      project_id:    interest.project_id,
+      requester_id:  interest.user_id,
+      owner_id:      userId,
+    });
+    // Ta bort från interests
+    await supabase.from('interests').delete().eq('id', interest.id);
+    setRequests((prev) => prev.filter((r) => r.id !== interest.id));
+    setReqCount((c) => c - 1);
+  }
+
+  async function handleDismiss(interestId) {
+    await supabase.from('interests').delete().eq('id', interestId);
+    setRequests((prev) => prev.filter((r) => r.id !== interestId));
+    setReqCount((c) => c - 1);
+  }
+
+  if (loading) {
+    return (
+      <div style={s.center}>
+        <span style={s.muted}>Laddar...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.page}>
+      <h1 style={s.heading}>Projekt</h1>
+
+      {/* Tabs */}
+      <div style={s.tabs}>
+        <button
+          style={{ ...s.tab, ...(tab === 'projects' ? s.tabActive : {}) }}
+          onClick={() => setTab('projects')}
+        >
+          Mina projekt
+          <span style={{ ...s.badge, ...(tab === 'projects' ? s.badgeActive : {}) }}>
+            {projects.length}
+          </span>
+        </button>
+        <button
+          style={{ ...s.tab, ...(tab === 'requests' ? s.tabActive : {}) }}
+          onClick={() => setTab('requests')}
+        >
+          Förfrågningar
+          {reqCount > 0 && (
+            <span style={{ ...s.badge, ...s.badgePing }}>
+              {reqCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Content */}
+      {tab === 'projects' ? (
+        <ProjectsList projects={projects} />
+      ) : (
+        <RequestsList
+          requests={requests}
+          onMatch={handleMatch}
+          onDismiss={handleDismiss}
+        />
+      )}
+    </div>
+  );
 }
+
+// ─── Mina projekt ─────────────────────────────────────────────────────────
+function ProjectsList({ projects }) {
+  if (projects.length === 0) {
+    return (
+      <div style={s.empty}>
+        <span style={s.emptyIcon}>📁</span>
+        <p style={s.emptyTitle}>Inga projekt än</p>
+        <p style={s.emptyText}>Gå till Skapa-fliken för att publicera ditt första projekt.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.list}>
+      {projects.map((p) => {
+        const sc = STAGE_COLOR[p.stage] || { bg: '#f3f4f6', color: '#6b7280' };
+        const roles = Array.isArray(p.roles_needed)
+          ? p.roles_needed
+          : (p.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
+
+        return (
+          <div key={p.id} style={s.card}>
+            <div style={s.cardTop}>
+              <h2 style={s.cardTitle}>{p.title}</h2>
+              <span style={{ ...s.stageChip, background: sc.bg, color: sc.color }}>
+                {STAGE_LABEL[p.stage] ?? p.stage}
+              </span>
+            </div>
+
+            {p.description && (
+              <p style={s.cardDesc}>{p.description}</p>
+            )}
+
+            <div style={s.cardMeta}>
+              {p.hours_per_week && (
+                <span style={s.metaChip}>⏱ {p.hours_per_week}h/v</span>
+              )}
+            </div>
+
+            {roles.length > 0 && (
+              <div style={s.roles}>
+                {roles.map((r) => (
+                  <span key={r} style={s.roleChip}>{r}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Förfrågningar ────────────────────────────────────────────────────────
+function RequestsList({ requests, onMatch, onDismiss }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(null); // id av pågående action
+
+  if (requests.length === 0) {
+    return (
+      <div style={s.empty}>
+        <span style={s.emptyIcon}>💌</span>
+        <p style={s.emptyTitle}>Inga förfrågningar</p>
+        <p style={s.emptyText}>När någon swiper höger på dina projekt dyker de upp här.</p>
+      </div>
+    );
+  }
+
+  async function act(fn, id) {
+    setBusy(id);
+    await fn();
+    setBusy(null);
+  }
+
+  return (
+    <div style={s.list}>
+      {requests.map((req) => {
+        const profile  = req.profiles || {};
+        const name     = profile.full_name || 'Okänd användare';
+        const tagline  = profile.tagline   || null;
+        const roles    = Array.isArray(profile.roles) ? profile.roles : [];
+        const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+        const isBusy   = busy === req.id;
+
+        return (
+          <div key={req.id} style={s.reqCard}>
+            {/* Project label */}
+            <div style={s.reqProject}>
+              <span style={s.reqProjectDot} />
+              {req.projectTitle}
+            </div>
+
+            {/* Person */}
+            <div style={s.reqPerson}>
+              <div style={s.avatar} onClick={() => navigate(`/profile/${req.user_id}`)} role="button">
+                {initials}
+              </div>
+              <div style={s.reqInfo}>
+                <span style={s.reqName} onClick={() => navigate(`/profile/${req.user_id}`)} role="button">
+                  {name}
+                </span>
+                {tagline && <span style={s.reqTagline}>{tagline}</span>}
+                {roles.length > 0 && (
+                  <div style={s.reqRoles}>
+                    {roles.slice(0, 3).map((r) => (
+                      <span key={r} style={s.reqRoleChip}>{r}</span>
+                    ))}
+                    {roles.length > 3 && (
+                      <span style={s.reqRoleChip}>+{roles.length - 3}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={s.reqActions}>
+              <button
+                style={{ ...s.dismissBtn, opacity: isBusy ? 0.5 : 1 }}
+                onClick={() => act(() => onDismiss(req.id), req.id)}
+                disabled={isBusy}
+              >
+                Avvisa
+              </button>
+              <button
+                style={{ ...s.matchBtn, opacity: isBusy ? 0.5 : 1 }}
+                onClick={() => act(() => onMatch(req), req.id)}
+                disabled={isBusy}
+              >
+                ♥ Matcha
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────
+const s = {
+  page: {
+    padding: '24px 16px 48px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  center: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+  },
+  muted: { color: '#9ca3af', fontSize: 15 },
+  heading: {
+    margin: 0,
+    fontSize: 22,
+    fontWeight: 700,
+    color: '#111',
+  },
+
+  // Tabs
+  tabs: {
+    display: 'flex',
+    borderBottom: '2px solid #f3f4f6',
+    gap: 0,
+  },
+  tab: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    padding: '10px 8px',
+    background: 'none',
+    border: 'none',
+    borderBottom: '2px solid transparent',
+    marginBottom: -2,
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#9ca3af',
+    cursor: 'pointer',
+  },
+  tabActive: {
+    color: '#7c3aed',
+    borderBottom: '2px solid #7c3aed',
+  },
+  badge: {
+    padding: '2px 7px',
+    borderRadius: 20,
+    fontSize: 11,
+    fontWeight: 700,
+    background: '#f3f4f6',
+    color: '#9ca3af',
+  },
+  badgeActive: {
+    background: '#ede9fe',
+    color: '#7c3aed',
+  },
+  badgePing: {
+    background: '#7c3aed',
+    color: '#fff',
+  },
+
+  // List
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+
+  // Project card
+  card: {
+    background: '#fff',
+    borderRadius: 16,
+    padding: '16px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  cardTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  cardTitle: {
+    margin: 0,
+    fontSize: 17,
+    fontWeight: 700,
+    color: '#111',
+    flex: 1,
+  },
+  stageChip: {
+    fontSize: 11,
+    fontWeight: 700,
+    padding: '3px 10px',
+    borderRadius: 20,
+    flexShrink: 0,
+  },
+  cardDesc: {
+    margin: 0,
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 1.5,
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  cardMeta: {
+    display: 'flex',
+    gap: 8,
+  },
+  metaChip: {
+    fontSize: 12,
+    color: '#6b7280',
+    background: '#f3f4f6',
+    padding: '4px 10px',
+    borderRadius: 20,
+  },
+  roles: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  roleChip: {
+    fontSize: 12,
+    background: '#ede9fe',
+    color: '#6d28d9',
+    padding: '3px 10px',
+    borderRadius: 20,
+    fontWeight: 500,
+  },
+
+  // Request card
+  reqCard: {
+    background: '#fff',
+    borderRadius: 16,
+    padding: '16px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  reqProject: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#7c3aed',
+  },
+  reqProjectDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: '#7c3aed',
+    flexShrink: 0,
+  },
+  reqPerson: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    cursor: 'pointer',
+  },
+  reqInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
+    flex: 1,
+    minWidth: 0,
+  },
+  reqName: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#111',
+    cursor: 'pointer',
+  },
+  reqTagline: {
+    fontSize: 13,
+    color: '#6b7280',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  reqRoles: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 2,
+  },
+  reqRoleChip: {
+    fontSize: 11,
+    background: '#f3f4f6',
+    color: '#6b7280',
+    padding: '2px 8px',
+    borderRadius: 20,
+    fontWeight: 500,
+  },
+  reqActions: {
+    display: 'flex',
+    gap: 8,
+  },
+  dismissBtn: {
+    flex: 1,
+    padding: '10px',
+    borderRadius: 10,
+    border: '1.5px solid #e5e7eb',
+    background: '#fff',
+    color: '#6b7280',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  matchBtn: {
+    flex: 2,
+    padding: '10px',
+    borderRadius: 10,
+    border: 'none',
+    background: '#7c3aed',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(124,58,237,0.3)',
+  },
+
+  // Empty state
+  empty: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '48px 24px',
+    gap: 8,
+  },
+  emptyIcon: { fontSize: 40 },
+  emptyTitle: { margin: 0, fontSize: 17, fontWeight: 700, color: '#111' },
+  emptyText: { margin: 0, fontSize: 14, color: '#9ca3af', textAlign: 'center', lineHeight: 1.5 },
+};
