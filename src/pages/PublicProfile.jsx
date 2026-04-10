@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -49,9 +50,7 @@ export default function PublicProfile() {
 
       {/* Header */}
       <div style={styles.header}>
-        <div style={styles.avatar}>
-          {(profile.full_name || '?').charAt(0).toUpperCase()}
-        </div>
+        <Avatar avatarUrl={profile.avatar_url} name={profile.full_name} size={64} />
         <div>
           <h1 style={styles.name}>{profile.full_name}</h1>
           {profile.tagline && <p style={styles.tagline}>{profile.tagline}</p>}
