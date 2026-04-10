@@ -26,7 +26,7 @@ export default function Register() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -36,19 +36,6 @@ export default function Register() {
 
     if (error) {
       setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Skapa profil-rad med samma id som auth-användaren
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      full_name: fullName,
-      email,
-    });
-
-    if (profileError) {
-      setError(profileError.message);
       setLoading(false);
       return;
     }
