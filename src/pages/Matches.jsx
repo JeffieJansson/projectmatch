@@ -1,3 +1,220 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
 export default function Matches() {
-  return <div>Matches</div>;
+  const navigate = useNavigate();
+  const [matches, setMatches] = useState([]);
+  const [userId, setUserId]   = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user.id);
+
+      // Hämta matches där användaren är owner eller requester
+      const { data } = await supabase
+        .from('matches')
+        .select(`
+          id,
+          owner_id,
+          requester_id,
+          created_at,
+          projects(title)
+        `)
+        .or(`owner_id.eq.${user.id},requester_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (!data || data.length === 0) {
+        setMatches([]);
+        setLoading(false);
+        return;
+      }
+
+      // Hämta den andra personens profil för varje match
+      const enriched = await Promise.all(
+        data.map(async (match) => {
+          const otherId = match.owner_id === user.id
+            ? match.requester_id
+            : match.owner_id;
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, full_name, tagline, roles')
+            .eq('id', otherId)
+            .single();
+
+          return { ...match, other: profile || { id: otherId, full_name: 'Okänd' } };
+        })
+      );
+
+      setMatches(enriched);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={s.center}>
+        <span style={s.muted}>Laddar matchningar...</span>
+      </div>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <div style={s.page}>
+        <h1 style={s.heading}>Matchningar</h1>
+        <div style={s.empty}>
+          <span style={s.emptyIcon}>💜</span>
+          <p style={s.emptyTitle}>Inga matchningar än</p>
+          <p style={s.emptyText}>
+            När en projektskapare accepterar din förfrågan dyker de upp här.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.page}>
+      <h1 style={s.heading}>Matchningar</h1>
+      <div style={s.list}>
+        {matches.map((match) => {
+          const name     = match.other.full_name || 'Okänd';
+          const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+          const tagline  = match.other.tagline || null;
+          const project  = match.projects?.title || null;
+
+          return (
+            <button
+              key={match.id}
+              style={s.card}
+              onClick={() => navigate(`/chat/${match.id}`)}
+            >
+              <div style={s.avatar}>{initials}</div>
+
+              <div style={s.info}>
+                <span style={s.name}>{name}</span>
+                {tagline && <span style={s.tagline}>{tagline}</span>}
+                {project && (
+                  <span style={s.projectLabel}>
+                    <span style={s.projectDot} />
+                    {project}
+                  </span>
+                )}
+              </div>
+
+              <span style={s.arrow}>›</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
+
+const s = {
+  page: {
+    padding: '24px 16px 48px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  center: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+  },
+  muted: { color: '#9ca3af', fontSize: 15 },
+  heading: {
+    margin: 0,
+    fontSize: 22,
+    fontWeight: 700,
+    color: '#111',
+  },
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  card: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    background: '#fff',
+    border: 'none',
+    borderRadius: 16,
+    padding: '14px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    cursor: 'pointer',
+    textAlign: 'left',
+    width: '100%',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  info: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
+    minWidth: 0,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#111',
+  },
+  tagline: {
+    fontSize: 13,
+    color: '#6b7280',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  projectLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    fontSize: 12,
+    color: '#7c3aed',
+    fontWeight: 600,
+  },
+  projectDot: {
+    width: 5,
+    height: 5,
+    borderRadius: '50%',
+    background: '#7c3aed',
+    flexShrink: 0,
+  },
+  arrow: {
+    fontSize: 22,
+    color: '#d1d5db',
+    flexShrink: 0,
+  },
+  empty: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '64px 24px',
+    gap: 8,
+  },
+  emptyIcon: { fontSize: 48 },
+  emptyTitle: { margin: 0, fontSize: 18, fontWeight: 700, color: '#111' },
+  emptyText: { margin: 0, fontSize: 14, color: '#9ca3af', textAlign: 'center', lineHeight: 1.6 },
+};
