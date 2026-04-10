@@ -12,6 +12,7 @@ export default function Chat() {
   const [text,     setText]     = useState('');
   const [loading,  setLoading]  = useState(true);
   const [sending,  setSending]  = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const bottomRef  = useRef(null);
   const channelRef = useRef(null);
@@ -96,11 +97,13 @@ export default function Chat() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
 
+    setSendError('');
     setText('');
     setSending(true);
 
+    const optimisticId = `tmp-${Date.now()}`;
     const optimistic = {
-      id:         `tmp-${Date.now()}`,
+      id:         optimisticId,
       match_id:   matchId,
       sender_id:  userId,
       content:    trimmed,
@@ -109,20 +112,28 @@ export default function Chat() {
     };
     setMessages((prev) => [...prev, optimistic]);
 
+    console.log('[Chat] Skickar meddelande:', { match_id: matchId, sender_id: userId, content: trimmed });
+
     const { data, error } = await supabase
       .from('messages')
       .insert({ match_id: matchId, sender_id: userId, content: trimmed })
       .select()
       .single();
 
-    if (!error && data) {
-      // Ersätt optimistisk rad med riktig
-      setMessages((prev) =>
-        prev.map((m) => (m.id === optimistic.id ? data : m))
-      );
+    if (error) {
+      console.error('[Chat] Supabase insert-fel:', error);
+      setSendError(`Kunde inte skicka: ${error.message}`);
+      // Återställ texten och ta bort optimistisk rad
+      setText(trimmed);
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
     } else {
-      // Ta bort felaktig optimistisk rad
-      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+      console.log('[Chat] Meddelande sparat:', data);
+      // Ersätt optimistisk rad med riktig (realtid kan ha lagt till den redan)
+      setMessages((prev) => {
+        const exists = prev.find((m) => m.id === data.id);
+        if (exists) return prev.filter((m) => m.id !== optimisticId);
+        return prev.map((m) => (m.id === optimisticId ? data : m));
+      });
     }
 
     setSending(false);
@@ -186,6 +197,13 @@ export default function Chat() {
         })}
         <div ref={bottomRef} />
       </div>
+
+      {/* Felmeddelande */}
+      {sendError && (
+        <div style={s.sendErrorBar}>
+          {sendError}
+        </div>
+      )}
 
       {/* Input */}
       <form style={s.inputBar} onSubmit={handleSend}>
@@ -306,21 +324,22 @@ const s = {
   bubbleMine: {
     background: '#7c3aed',
     borderBottomRightRadius: 4,
+    color: '#fff',
   },
   bubbleTheirs: {
     background: '#fff',
     borderBottomLeftRadius: 4,
     boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    color: '#111',
   },
   bubbleText: {
     fontSize: 15,
     lineHeight: 1.45,
-    color: 'inherit',
     wordBreak: 'break-word',
   },
   bubbleTime: {
     fontSize: 10,
-    opacity: 0.55,
+    opacity: 0.6,
     alignSelf: 'flex-end',
   },
 
@@ -343,6 +362,14 @@ const s = {
     background: '#f9f9fb',
     fontFamily: 'inherit',
     color: '#111',
+  },
+  sendErrorBar: {
+    background: '#fef2f2',
+    color: '#dc2626',
+    fontSize: 13,
+    padding: '8px 16px',
+    borderTop: '1px solid #fecaca',
+    flexShrink: 0,
   },
   sendBtn: {
     width: 44,
