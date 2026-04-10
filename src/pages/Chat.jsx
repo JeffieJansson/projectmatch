@@ -1,6 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
+
+function formatTime(isoString) {
+  const date  = new Date(isoString.endsWith('Z') ? isoString : isoString + 'Z');
+  const today = new Date();
+  const isToday =
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth()    === today.getMonth()    &&
+    date.getDate()     === today.getDate();
+
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (isToday) return time;
+
+  const dateStr = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+  return `${dateStr} ${time}`;
+}
 
 export default function Chat() {
   const { matchId } = useParams();
@@ -39,7 +55,7 @@ export default function Chat() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, full_name, tagline')
+        .select('id, full_name, tagline, avatar_url')
         .eq('id', otherId)
         .single();
 
@@ -148,15 +164,14 @@ export default function Chat() {
     );
   }
 
-  const name     = other?.full_name || 'Okänd';
-  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const name = other?.full_name || 'Okänd';
 
   return (
     <div style={s.page}>
       {/* Header */}
       <div style={s.header}>
         <button style={s.backBtn} onClick={() => navigate('/matches')}>←</button>
-        <div style={s.headerAvatar}>{initials}</div>
+        <Avatar avatarUrl={other?.avatar_url} name={name} size={38} />
         <div style={s.headerInfo}>
           <span style={s.headerName}>{name}</span>
           {other?.projectTitle && (
@@ -185,12 +200,7 @@ export default function Chat() {
                 }}
               >
                 <span style={s.bubbleText}>{msg.content}</span>
-                <span style={s.bubbleTime}>
-                  {new Date(msg.created_at).toLocaleTimeString('sv-SE', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <span style={s.bubbleTime}>{formatTime(msg.created_at)}</span>
               </div>
             </div>
           );
@@ -260,19 +270,6 @@ const s = {
     cursor: 'pointer',
     padding: '0 4px',
     lineHeight: 1,
-    flexShrink: 0,
-  },
-  headerAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     flexShrink: 0,
   },
   headerInfo: {
