@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase';
 import Explore from './pages/Explore';
 import MyProjects from './pages/MyProjects';
 import Matches from './pages/Matches';
+import Chat from './pages/Chat';
 import CreateProject from './pages/CreateProject';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
@@ -54,6 +55,7 @@ export default function App() {
                     <Route path="/create" element={<CreateProject />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:id" element={<PublicProfile />} />
+                    <Route path="/chat/:matchId" element={<Chat />} />
                   </Routes>
                 </main>
                 <BottomNav />
