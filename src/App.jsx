@@ -10,17 +10,14 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Onboarding from './pages/Onboarding';
 import BottomNav from './components/BottomNav';
 
-function ProtectedRoute({ session, children }) {
-  if (session === undefined) return null; // väntar på auth-check
-  if (!session) return <Navigate to="/login" replace />;
-  return children;
-}
-
 export default function App() {
-  const [session, setSession] = useState(undefined);
+  const [session, setSession] = useState(undefined);           // undefined = loading
+  const [onboardingDone, setOnboardingDone] = useState(undefined); // undefined = unknown
 
+  // ── Auth listener ─────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -28,24 +25,57 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (!session) setOnboardingDone(undefined);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // ── Fetch onboarding status whenever the logged-in user changes ───────────
+  useEffect(() => {
+    if (!session) return;
+    supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => setOnboardingDone(!!data?.onboarding_completed));
+  }, [session?.user?.id]);
+
+  // Still loading auth or profile
+  if (session === undefined || (session && onboardingDone === undefined)) return null;
+
   return (
     <BrowserRouter>
       <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
         <Routes>
-          {/* Publika routes */}
-          <Route path="/login" element={session ? <Navigate to="/explore" replace /> : <Login />} />
-          <Route path="/register" element={session ? <Navigate to="/explore" replace /> : <Register />} />
+          {/* Public */}
+          <Route
+            path="/login"
+            element={session ? <Navigate to={onboardingDone ? '/explore' : '/onboarding'} replace /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={session ? <Navigate to={onboardingDone ? '/explore' : '/onboarding'} replace /> : <Register />}
+          />
 
-          {/* Skyddade routes */}
+          {/* Onboarding – protected, no BottomNav */}
+          <Route
+            path="/onboarding"
+            element={
+              !session ? <Navigate to="/login" replace /> :
+              onboardingDone ? <Navigate to="/explore" replace /> :
+              <Onboarding onComplete={() => setOnboardingDone(true)} />
+            }
+          />
+
+          {/* Main app – protected, with BottomNav */}
           <Route
             path="/*"
             element={
-              <ProtectedRoute session={session}>
+              !session ? <Navigate to="/login" replace /> :
+              !onboardingDone ? <Navigate to="/onboarding" replace /> :
+              <>
                 <main style={{ flex: 1, overflowY: 'auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                   <Routes>
                     <Route path="/" element={<Navigate to="/explore" replace />} />
@@ -59,7 +89,7 @@ export default function App() {
                   </Routes>
                 </main>
                 <BottomNav />
-              </ProtectedRoute>
+              </>
             }
           />
         </Routes>

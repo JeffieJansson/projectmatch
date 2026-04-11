@@ -317,7 +317,6 @@ function buildAvatarUrl(p) {
 
 function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave, onCancel }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerTab, setPickerTab]   = useState('emoji'); // 'emoji' | 'upload'
   const [uploading, setUploading]   = useState(false);
   const [uploadErr, setUploadErr]   = useState('');
   const [picker, setPicker]         = useState(() => initPickerState(draft.avatarUrl));
@@ -405,114 +404,96 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                 <button style={e.modalClose} onClick={() => setPickerOpen(false)}>×</button>
               </div>
 
-              {/* Tabs */}
-              <div style={e.pickerTabs}>
-                {['emoji', 'upload'].map((tab) => (
-                  <button
-                    key={tab}
-                    style={{ ...e.pickerTab, ...(pickerTab === tab ? e.pickerTabActive : {}) }}
-                    onClick={() => setPickerTab(tab)}
-                  >
-                    {tab === 'emoji' ? 'Emoji avatar' : 'Upload photo'}
-                  </button>
-                ))}
-              </div>
+              <div style={e.emojiPanel}>
 
-              {pickerTab === 'emoji' ? (
-                <div style={e.emojiPanel}>
+                {/* Live preview */}
+                <div style={e.previewRow}>
+                  <Avatar avatarUrl={previewUrl} name={draft.fullName} size={80} />
+                  <div style={e.previewControls}>
 
-                  {/* Live preview */}
-                  <div style={e.previewRow}>
-                    <Avatar avatarUrl={previewUrl} name={draft.fullName} size={80} />
-                    <div style={e.previewControls}>
+                    {/* Background color */}
+                    <div style={e.colorRow}>
+                      <label style={e.colorLabel}>Background</label>
+                      <div style={e.colorInputWrap}>
+                        <input
+                          type="color"
+                          value={picker.bg}
+                          onChange={(ev) => setPick('bg', ev.target.value)}
+                          style={e.colorInput}
+                        />
+                        <span style={e.colorHex}>{picker.bg}</span>
+                      </div>
+                    </div>
 
-                      {/* Background color */}
+                    {/* Text color — only visible when no emoji */}
+                    {!picker.emoji && (
                       <div style={e.colorRow}>
-                        <label style={e.colorLabel}>Background</label>
+                        <label style={e.colorLabel}>Text color</label>
                         <div style={e.colorInputWrap}>
                           <input
                             type="color"
-                            value={picker.bg}
-                            onChange={(ev) => setPick('bg', ev.target.value)}
+                            value={picker.fg}
+                            onChange={(ev) => setPick('fg', ev.target.value)}
                             style={e.colorInput}
                           />
-                          <span style={e.colorHex}>{picker.bg}</span>
+                          <span style={e.colorHex}>{picker.fg}</span>
                         </div>
                       </div>
+                    )}
 
-                      {/* Text color — only visible when no emoji */}
-                      {!picker.emoji && (
-                        <div style={e.colorRow}>
-                          <label style={e.colorLabel}>Text color</label>
-                          <div style={e.colorInputWrap}>
-                            <input
-                              type="color"
-                              value={picker.fg}
-                              onChange={(ev) => setPick('fg', ev.target.value)}
-                              style={e.colorInput}
-                            />
-                            <span style={e.colorHex}>{picker.fg}</span>
-                          </div>
+                    {/* Font — only visible when no emoji */}
+                    {!picker.emoji && (
+                      <div style={e.colorRow}>
+                        <label style={e.colorLabel}>Font</label>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {FONTS.map((f) => (
+                            <button
+                              key={f.value}
+                              style={{
+                                ...e.fontBtn,
+                                fontFamily: f.value,
+                                ...(picker.font === f.value ? e.fontBtnActive : {}),
+                              }}
+                              onClick={() => setPick('font', f.value)}
+                            >
+                              {f.label}
+                            </button>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Font — only visible when no emoji */}
-                      {!picker.emoji && (
-                        <div style={e.colorRow}>
-                          <label style={e.colorLabel}>Font</label>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            {FONTS.map((f) => (
-                              <button
-                                key={f.value}
-                                style={{
-                                  ...e.fontBtn,
-                                  fontFamily: f.value,
-                                  ...(picker.font === f.value ? e.fontBtnActive : {}),
-                                }}
-                                onClick={() => setPick('font', f.value)}
-                              >
-                                {f.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Clear emoji */}
-                      {picker.emoji && (
-                        <button style={e.clearEmojiBtn} onClick={() => setPick('emoji', '')}>
-                          Use initials
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Emoji grid */}
-                  <div style={e.emojiGrid}>
-                    {EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        style={{
-                          ...e.emojiBtn,
-                          background: picker.emoji === emoji ? '#ede9fe' : '#f9f9fb',
-                          border: picker.emoji === emoji ? '2px solid #7c3aed' : '2px solid transparent',
-                        }}
-                        onClick={() => setPick('emoji', emoji)}
-                      >
-                        {emoji}
+                    {/* Clear emoji */}
+                    {picker.emoji && (
+                      <button style={e.clearEmojiBtn} onClick={() => setPick('emoji', '')}>
+                        Use initials
                       </button>
-                    ))}
-                  </div>
-
-                  {/* Confirm */}
-                  <div style={{ padding: '0 16px 16px' }}>
-                    <button style={e.confirmBtn} onClick={confirmEmojiPicker}>
-                      Use this avatar
-                    </button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div style={e.uploadArea}>
+
+                {/* Emoji grid */}
+                <div style={e.emojiGrid}>
+                  {EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      style={{
+                        ...e.emojiBtn,
+                        background: picker.emoji === emoji ? '#ede9fe' : '#f9f9fb',
+                        border: picker.emoji === emoji ? '2px solid #7c3aed' : '2px solid transparent',
+                      }}
+                      onClick={() => setPick('emoji', emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Confirm + upload */}
+                <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <button style={e.confirmBtn} onClick={confirmEmojiPicker}>
+                    Use this avatar
+                  </button>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -521,16 +502,15 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     onChange={handleFileUpload}
                   />
                   <button
-                    style={e.uploadBtn}
+                    style={e.uploadInlineBtn}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    {uploading ? 'Uploading...' : '📷 Choose image from device'}
+                    {uploading ? 'Uploading...' : '📷 Ladda upp foto istället'}
                   </button>
                   {uploadErr && <p style={e.uploadErr}>{uploadErr}</p>}
-                  <p style={e.uploadHint}>JPG, PNG or GIF. Max 5 MB.</p>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -852,13 +832,6 @@ const e = {
   },
   modalTitle: { fontSize: 16, fontWeight: 700, color: '#111' },
   modalClose: { background: 'none', border: 'none', fontSize: 22, color: '#9ca3af', cursor: 'pointer', padding: 0, lineHeight: 1 },
-  pickerTabs: { display: 'flex', borderBottom: '1px solid #f0f0f0', flexShrink: 0 },
-  pickerTab: {
-    flex: 1, padding: '10px', border: 'none', background: 'none',
-    fontSize: 14, fontWeight: 600, color: '#9ca3af', cursor: 'pointer',
-    borderBottom: '2px solid transparent', marginBottom: -1,
-  },
-  pickerTabActive: { color: '#7c3aed', borderBottom: '2px solid #7c3aed' },
   // Emoji panel
   emojiPanel: {
     display: 'flex',
@@ -959,25 +932,18 @@ const e = {
     fontWeight: 700,
     cursor: 'pointer',
   },
-  uploadArea: {
-    padding: '24px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 12,
-  },
-  uploadBtn: {
-    padding: '13px 24px',
-    borderRadius: 12,
-    border: '1.5px solid #7c3aed',
-    background: '#faf5ff',
-    color: '#7c3aed',
-    fontSize: 15,
-    fontWeight: 600,
+  uploadInlineBtn: {
+    padding: '11px',
+    borderRadius: 10,
+    border: '1.5px solid #e5e7eb',
+    background: '#fff',
+    color: '#6b7280',
+    fontSize: 14,
+    fontWeight: 500,
     cursor: 'pointer',
+    textAlign: 'center',
   },
   uploadErr: { margin: 0, fontSize: 13, color: '#ef4444' },
-  uploadHint: { margin: 0, fontSize: 12, color: '#9ca3af' },
 
   // Radio
   radioGroup: { display: 'flex', gap: 8, flexWrap: 'wrap' },
