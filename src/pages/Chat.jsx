@@ -33,13 +33,13 @@ export default function Chat() {
   const bottomRef  = useRef(null);
   const channelRef = useRef(null);
 
-  // ── Load match + meddelanden ─────────────────────────────────────────────
+  // ── Load match + messages ────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user.id);
 
-      // Hämta match för att hitta den andra personen
+      // Fetch match to find the other person
       const { data: match } = await supabase
         .from('matches')
         .select('owner_id, requester_id, projects(title)')
@@ -61,7 +61,7 @@ export default function Chat() {
 
       setOther({ ...profile, projectTitle: match.projects?.title });
 
-      // Hämta befintliga meddelanden
+      // Fetch existing messages
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
@@ -75,7 +75,7 @@ export default function Chat() {
     load();
   }, [matchId, navigate]);
 
-  // ── Realtime-prenumeration ───────────────────────────────────────────────
+  // ── Realtime subscription ────────────────────────────────────────────────
   useEffect(() => {
     channelRef.current = supabase
       .channel(`chat:${matchId}`)
@@ -89,7 +89,7 @@ export default function Chat() {
         },
         (payload) => {
           setMessages((prev) => {
-            // Undvik dubbletter om avsändaren redan lade till optimistiskt
+            // Avoid duplicates if sender already added optimistically
             if (prev.find((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
@@ -102,12 +102,12 @@ export default function Chat() {
     };
   }, [matchId]);
 
-  // ── Scrolla till botten när meddelanden ändras ───────────────────────────
+  // ── Scroll to bottom when messages change ────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── Skicka meddelande ────────────────────────────────────────────────────
+  // ── Send message ─────────────────────────────────────────────────────────
   async function handleSend(e) {
     e.preventDefault();
     const trimmed = text.trim();
@@ -128,7 +128,7 @@ export default function Chat() {
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    console.log('[Chat] Skickar meddelande:', { match_id: matchId, sender_id: userId, content: trimmed });
+    console.log('[Chat] Sending message:', { match_id: matchId, sender_id: userId, content: trimmed });
 
     const { data, error } = await supabase
       .from('messages')
@@ -137,14 +137,14 @@ export default function Chat() {
       .single();
 
     if (error) {
-      console.error('[Chat] Supabase insert-fel:', error);
-      setSendError(`Kunde inte skicka: ${error.message}`);
-      // Återställ texten och ta bort optimistisk rad
+      console.error('[Chat] Supabase insert error:', error);
+      setSendError(`Failed to send: ${error.message}`);
+      // Restore text and remove optimistic row
       setText(trimmed);
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
     } else {
-      console.log('[Chat] Meddelande sparat:', data);
-      // Ersätt optimistisk rad med riktig (realtid kan ha lagt till den redan)
+      console.log('[Chat] Message saved:', data);
+      // Replace optimistic row with real one (realtime may have already added it)
       setMessages((prev) => {
         const exists = prev.find((m) => m.id === data.id);
         if (exists) return prev.filter((m) => m.id !== optimisticId);
@@ -159,12 +159,12 @@ export default function Chat() {
   if (loading) {
     return (
       <div style={s.center}>
-        <span style={s.muted}>Laddar chatt...</span>
+        <span style={s.muted}>Loading chat...</span>
       </div>
     );
   }
 
-  const name = other?.full_name || 'Okänd';
+  const name = other?.full_name || 'Unknown';
 
   return (
     <div style={s.page}>
@@ -180,10 +180,10 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Meddelandelista */}
+      {/* Message list */}
       <div style={s.messageList}>
         {messages.length === 0 && (
-          <p style={s.emptyChat}>Starta konversationen! 👋</p>
+          <p style={s.emptyChat}>Start the conversation! 👋</p>
         )}
         {messages.map((msg) => {
           const isMine = msg.sender_id === userId;
@@ -208,7 +208,7 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Felmeddelande */}
+      {/* Error message */}
       {sendError && (
         <div style={s.sendErrorBar}>
           {sendError}
@@ -221,7 +221,7 @@ export default function Chat() {
           style={s.input}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Skriv ett meddelande..."
+          placeholder="Write a message..."
           autoComplete="off"
         />
         <button

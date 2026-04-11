@@ -14,7 +14,7 @@ export default function Matches() {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user.id);
 
-      // Hämta matches där användaren är owner eller requester
+      // Fetch matches where the user is owner or requester
       const { data } = await supabase
         .from('matches')
         .select(`
@@ -33,7 +33,7 @@ export default function Matches() {
         return;
       }
 
-      // Hämta den andra personens profil för varje match
+      // Fetch the other person's profile for each match
       const enriched = await Promise.all(
         data.map(async (match) => {
           const otherId = match.owner_id === user.id
@@ -46,7 +46,7 @@ export default function Matches() {
             .eq('id', otherId)
             .single();
 
-          return { ...match, other: profile || { id: otherId, full_name: 'Okänd' } };
+          return { ...match, other: profile || { id: otherId, full_name: 'Unknown' } };
         })
       );
 
@@ -59,7 +59,7 @@ export default function Matches() {
   if (loading) {
     return (
       <div style={s.center}>
-        <span style={s.muted}>Laddar matchningar...</span>
+        <span style={s.muted}>Loading matches...</span>
       </div>
     );
   }
@@ -67,12 +67,12 @@ export default function Matches() {
   if (matches.length === 0) {
     return (
       <div style={s.page}>
-        <h1 style={s.heading}>Matchningar</h1>
+        <h1 style={s.heading}>Matches</h1>
         <div style={s.empty}>
           <span style={s.emptyIcon}>💜</span>
-          <p style={s.emptyTitle}>Inga matchningar än</p>
+          <p style={s.emptyTitle}>No matches yet</p>
           <p style={s.emptyText}>
-            När en projektskapare accepterar din förfrågan dyker de upp här.
+            When a project creator accepts your request they'll appear here.
           </p>
         </div>
       </div>
@@ -81,10 +81,10 @@ export default function Matches() {
 
   return (
     <div style={s.page}>
-      <h1 style={s.heading}>Matchningar</h1>
+      <h1 style={s.heading}>Matches</h1>
       <div style={s.list}>
         {matches.map((match) => {
-          const name    = match.other.full_name || 'Okänd';
+          const name    = match.other.full_name || 'Unknown';
           const tagline = match.other.tagline || null;
           const project = match.projects?.title || null;
 

@@ -16,9 +16,9 @@ const ROLES = [
 ];
 
 const STAGES = [
-  { value: 'idea',  label: 'Idé',   desc: 'Konceptfas, inget byggt än' },
-  { value: 'mvp',   label: 'MVP',   desc: 'Första version under bygge' },
-  { value: 'beta',  label: 'Beta',  desc: 'Lanserat, söker tillväxt' },
+  { value: 'idea',  label: 'Idea',  desc: 'Concept stage, nothing built yet' },
+  { value: 'mvp',   label: 'MVP',   desc: 'First version in progress' },
+  { value: 'beta',  label: 'Beta',  desc: 'Launched, looking for growth' },
 ];
 
 export default function CreateProject() {
@@ -44,11 +44,11 @@ export default function CreateProject() {
     setError('');
 
     if (!stage) {
-      setError('Välj ett stadium för projektet.');
+      setError('Please select a stage for the project.');
       return;
     }
     if (roles.length === 0) {
-      setError('Välj minst en roll du söker.');
+      setError('Please select at least one role you are looking for.');
       return;
     }
 
@@ -77,30 +77,30 @@ export default function CreateProject() {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.heading}>Nytt projekt</h1>
+      <h1 style={styles.heading}>New project</h1>
 
       <form onSubmit={handleSubmit} style={styles.form}>
 
-        {/* Titel */}
-        <Field label="Projektnamn *">
+        {/* Title */}
+        <Field label="Project name *">
           <input
             style={styles.input}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="T.ex. EcoTrack"
+            placeholder="e.g. EcoTrack"
             maxLength={80}
             required
           />
         </Field>
 
-        {/* Beskrivning */}
-        <Field label="Beskrivning *">
+        {/* Description */}
+        <Field label="Description *">
           <textarea
             style={{ ...styles.input, ...styles.textarea }}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Vad är projektet? Vilket problem löser det?"
+            placeholder="What is the project? What problem does it solve?"
             maxLength={600}
             rows={4}
             required
@@ -108,8 +108,8 @@ export default function CreateProject() {
           <span style={styles.charCount}>{description.length} / 600</span>
         </Field>
 
-        {/* Stadium */}
-        <Field label="Stadium *">
+        {/* Stage */}
+        <Field label="Stage *">
           <div style={styles.stageGroup}>
             {STAGES.map((s) => (
               <button
@@ -128,8 +128,8 @@ export default function CreateProject() {
           </div>
         </Field>
 
-        {/* Tid per vecka */}
-        <Field label="Tid per vecka (timmar) *">
+        {/* Hours per week */}
+        <Field label="Hours per week *">
           <div style={styles.hoursRow}>
             {[2, 5, 10, 20].map((h) => (
               <button
@@ -149,15 +149,15 @@ export default function CreateProject() {
               type="number"
               value={hoursPerWeek}
               onChange={(e) => setHoursPerWeek(e.target.value)}
-              placeholder="Eget"
+              placeholder="Other"
               min={1}
               max={80}
             />
           </div>
         </Field>
 
-        {/* Roller */}
-        <Field label="Roller som söks *">
+        {/* Roles */}
+        <Field label="Roles needed *">
           <div style={styles.rolesGrid}>
             {ROLES.map((role) => {
               const active = roles.includes(role);
@@ -177,8 +177,8 @@ export default function CreateProject() {
           </div>
         </Field>
 
-        {/* Länk */}
-        <Field label="Länk (valfritt)">
+        {/* Link */}
+        <Field label="Link (optional)">
           <input
             style={styles.input}
             type="url"
@@ -191,7 +191,7 @@ export default function CreateProject() {
         {error && <p style={styles.error}>{error}</p>}
 
         <button style={styles.submitBtn} type="submit" disabled={loading}>
-          {loading ? 'Sparar...' : 'Publicera projekt'}
+          {loading ? 'Saving...' : 'Publish project'}
         </button>
       </form>
     </div>

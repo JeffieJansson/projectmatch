@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const SWIPE_THRESHOLD = 80; // px innan swipe räknas som beslut
+const SWIPE_THRESHOLD = 80; // px before swipe counts as a decision
 
 export default function Explore() {
   const [projects, setProjects] = useState([]);
@@ -19,7 +19,7 @@ export default function Explore() {
     async function fetchProjects() {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Hämta projekt som användaren inte redan har swipat på
+      // Fetch projects the user hasn't swiped on yet
       const { data: seen } = await supabase
         .from('interests')
         .select('project_id')
@@ -67,7 +67,7 @@ export default function Explore() {
     } else if (offset.x < -SWIPE_THRESHOLD) {
       commitSwipe('skip');
     } else {
-      // Snap tillbaka
+      // Snap back
       setOffset({ x: 0, y: 0 });
     }
     dragStart.current = null;
@@ -86,7 +86,7 @@ export default function Explore() {
       setSaving(false);
     }
 
-    // Animera kort ut
+    // Animate card out
     setOffset({ x: direction === 'like' ? 600 : -600, y: 0 });
 
     setTimeout(() => {
@@ -96,7 +96,7 @@ export default function Explore() {
     }, 300);
   }
 
-  // ── Rotation och opacity baserat på drag ─────────────────────────────────
+  // ── Rotation and opacity based on drag ───────────────────────────────────
   const rotate = offset.x * 0.08;
   const likeOpacity = Math.min(Math.max(offset.x / SWIPE_THRESHOLD, 0), 1);
   const skipOpacity = Math.min(Math.max(-offset.x / SWIPE_THRESHOLD, 0), 1);
@@ -113,7 +113,7 @@ export default function Explore() {
   if (loading) {
     return (
       <div style={styles.center}>
-        <span style={styles.loadingText}>Laddar projekt...</span>
+        <span style={styles.loadingText}>Loading projects...</span>
       </div>
     );
   }
@@ -122,8 +122,8 @@ export default function Explore() {
     return (
       <div style={styles.center}>
         <div style={styles.emptyIcon}>🎉</div>
-        <h3 style={styles.emptyTitle}>Du har sett allt!</h3>
-        <p style={styles.emptyText}>Kolla tillbaka snart för nya projekt.</p>
+        <h3 style={styles.emptyTitle}>You've seen everything!</h3>
+        <p style={styles.emptyText}>Check back soon for new projects.</p>
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function Explore() {
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Utforska</h1>
+        <h1 style={styles.title}>Explore</h1>
         <span style={styles.counter}>{index + 1} / {projects.length}</span>
       </div>
 
@@ -153,11 +153,11 @@ export default function Explore() {
         >
           {/* Like-badge */}
           <div style={{ ...styles.badge, ...styles.likeBadge, opacity: likeOpacity }}>
-            INTRESSERAD
+            INTERESTED
           </div>
           {/* Skip-badge */}
           <div style={{ ...styles.badge, ...styles.skipBadge, opacity: skipOpacity }}>
-            HOPPA
+            SKIP
           </div>
 
           <ProjectCard project={current} />
@@ -170,7 +170,7 @@ export default function Explore() {
           style={{ ...styles.btn, ...styles.skipBtn }}
           onClick={() => commitSwipe('skip')}
           disabled={saving}
-          aria-label="Hoppa"
+          aria-label="Skip"
         >
           ✕
         </button>
@@ -178,7 +178,7 @@ export default function Explore() {
           style={{ ...styles.btn, ...styles.likeBtn }}
           onClick={() => commitSwipe('like')}
           disabled={saving}
-          aria-label="Intresserad"
+          aria-label="Interested"
         >
           ♥
         </button>
@@ -207,12 +207,12 @@ function ProjectCard({ project }) {
         <p style={card.description}>{project.description}</p>
 
         <div style={card.meta}>
-          <MetaChip icon="⏱" label={`${project.hours_per_week ?? '?'} h/vecka`} />
+          <MetaChip icon="⏱" label={`${project.hours_per_week ?? '?'} h/week`} />
         </div>
 
         {roles.length > 0 && (
           <div style={card.section}>
-            <p style={card.sectionLabel}>Söker</p>
+            <p style={card.sectionLabel}>Looking for</p>
             <div style={card.tags}>
               {roles.map((role) => (
                 <span key={role} style={card.tag}>{role}</span>
@@ -236,12 +236,12 @@ function MetaChip({ icon, label }) {
 // ── Hjälpfunktioner ───────────────────────────────────────────────────────
 function stageLabel(stage) {
   const map = {
-    idea: 'Idé',
+    idea: 'Idea',
     mvp: 'MVP',
-    growth: 'Tillväxt',
-    scaling: 'Skalning',
+    growth: 'Growth',
+    scaling: 'Scaling',
   };
-  return map[stage] ?? stage ?? 'Okänt';
+  return map[stage] ?? stage ?? 'Unknown';
 }
 
 function stageColor(stage) {
@@ -398,6 +398,7 @@ const card = {
     flexDirection: 'column',
     gap: 10,
     overflowY: 'auto',
+    alignItems: 'center',
   },
   title: {
     margin: 0,
@@ -405,17 +406,20 @@ const card = {
     fontWeight: 700,
     color: '#111',
     lineHeight: 1.2,
+    textAlign: 'center',
   },
   description: {
     margin: 0,
     fontSize: 14,
     color: '#555',
     lineHeight: 1.55,
+    textAlign: 'center',
   },
   meta: {
     display: 'flex',
     gap: 8,
     flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   chip: {
     fontSize: 13,
@@ -428,6 +432,8 @@ const card = {
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
+    alignItems: 'center',
+    width: '100%',
   },
   sectionLabel: {
     margin: 0,
@@ -436,11 +442,13 @@ const card = {
     color: '#9ca3af',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    textAlign: 'center',
   },
   tags: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: 6,
+    justifyContent: 'center',
   },
   tag: {
     fontSize: 13,
