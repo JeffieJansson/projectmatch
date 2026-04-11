@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useNotifications } from '../hooks/useNotifications';
 
 const tabs = [
   {
@@ -14,6 +15,7 @@ const tabs = [
   {
     to: '/my-projects',
     label: 'Projects',
+    badgeKey: 'requests',
     icon: (
       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <rect x="2" y="7" width="20" height="14" rx="2" />
@@ -35,6 +37,7 @@ const tabs = [
   {
     to: '/matches',
     label: 'Matches',
+    badgeKey: 'unread',
     icon: (
       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -54,30 +57,45 @@ const tabs = [
 ];
 
 export default function BottomNav() {
+  const { requestCount, unreadCount } = useNotifications();
+
+  const badgeCounts = {
+    requests: requestCount,
+    unread: unreadCount,
+  };
+
   return (
     <nav style={styles.nav}>
-      {tabs.map((tab) => (
-        <NavLink
-          key={tab.to}
-          to={tab.to}
-          style={({ isActive }) => ({
-            ...styles.tab,
-            color: isActive ? '#7c3aed' : '#9ca3af',
-          })}
-        >
-          {({ isActive }) => (
-            <>
-              <span style={{ display: 'flex', position: 'relative' }}>
-                {isActive && <span style={styles.activeDot} />}
-                {tab.icon}
-              </span>
-              <span style={{ ...styles.label, fontWeight: isActive ? 600 : 400 }}>
-                {tab.label}
-              </span>
-            </>
-          )}
-        </NavLink>
-      ))}
+      {tabs.map((tab) => {
+        const count = tab.badgeKey ? (badgeCounts[tab.badgeKey] || 0) : 0;
+        return (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            style={({ isActive }) => ({
+              ...styles.tab,
+              color: isActive ? '#7c3aed' : '#9ca3af',
+            })}
+          >
+            {({ isActive }) => (
+              <>
+                <span style={{ display: 'flex', position: 'relative' }}>
+                  {isActive && <span style={styles.activeDot} />}
+                  {tab.icon}
+                  {count > 0 && (
+                    <span style={styles.badge}>
+                      {count > 99 ? '99+' : count}
+                    </span>
+                  )}
+                </span>
+                <span style={{ ...styles.label, fontWeight: isActive ? 600 : 400 }}>
+                  {tab.label}
+                </span>
+              </>
+            )}
+          </NavLink>
+        );
+      })}
     </nav>
   );
 }
@@ -112,5 +130,24 @@ const styles = {
     height: 4,
     borderRadius: '50%',
     background: '#7c3aed',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    background: '#7c3aed',
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 4px',
+    lineHeight: 1,
+    pointerEvents: 'none',
+    boxSizing: 'border-box',
   },
 };
