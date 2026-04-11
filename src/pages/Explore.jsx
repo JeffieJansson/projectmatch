@@ -19,6 +19,16 @@ export default function Explore() {
     async function fetchProjects() {
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Fetch user's roles for relevance sorting
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('roles')
+        .eq('id', user.id)
+        .single();
+      const userRoles = new Set(
+        (Array.isArray(profile?.roles) ? profile.roles : []).map((r) => r.toLowerCase())
+      );
+
       // Fetch projects the user hasn't swiped on yet
       const { data: seen } = await supabase
         .from('interests')
@@ -33,7 +43,20 @@ export default function Explore() {
       }
 
       const { data } = await query;
-      setProjects(data || []);
+      const projects = data || [];
+
+      // Sort: projects with at least one matching role first
+      if (userRoles.size > 0) {
+        projects.sort((a, b) => {
+          const rolesA = Array.isArray(a.roles_needed) ? a.roles_needed : (a.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
+          const rolesB = Array.isArray(b.roles_needed) ? b.roles_needed : (b.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
+          const matchA = rolesA.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
+          const matchB = rolesB.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
+          return matchA - matchB;
+        });
+      }
+
+      setProjects(projects);
       setLoading(false);
     }
 
