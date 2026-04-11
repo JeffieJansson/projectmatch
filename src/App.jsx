@@ -35,7 +35,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div style={{ maxWidth: 480, margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
         <Routes>
           {/* Publika routes */}
           <Route path="/login" element={session ? <Navigate to="/explore" replace /> : <Login />} />
@@ -46,7 +46,7 @@ export default function App() {
             path="/*"
             element={
               <ProtectedRoute session={session}>
-                <main style={{ flex: 1, overflowY: 'auto' }}>
+                <main style={{ flex: 1, overflowY: 'auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                   <Routes>
                     <Route path="/" element={<Navigate to="/explore" replace />} />
                     <Route path="/explore" element={<Explore />} />
