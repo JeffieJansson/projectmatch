@@ -133,7 +133,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-        <span style={{ color: '#9ca3af', fontSize: 15 }}>Laddar profil...</span>
+        <span style={{ color: '#9ca3af', fontSize: 15 }}>Loading profile...</span>
       </div>
     );
   }
@@ -176,8 +176,8 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
     <div style={v.page}>
       {isPreview && (
         <div style={v.previewBanner}>
-          <span style={v.previewLabel}>Förhandsgranskning</span>
-          <button style={v.previewBack} onClick={onBackToEdit}>← Tillbaka till redigering</button>
+          <span style={v.previewLabel}>Preview</span>
+          <button style={v.previewBack} onClick={onBackToEdit}>← Back to editing</button>
         </div>
       )}
 
@@ -187,24 +187,24 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
           <AvatarBanner avatarUrl={data.avatarUrl} name={data.fullName} />
           <div style={v.avatarGradient} />
           <div style={v.avatarName}>
-            <h1 style={v.name}>{data.fullName || 'Ditt namn'}</h1>
+            <h1 style={v.name}>{data.fullName || 'Your name'}</h1>
             {data.tagline && <p style={v.taglineOnAvatar}>{data.tagline}</p>}
           </div>
         </div>
 
         <div style={v.body}>
           {justSaved && !isPreview && (
-            <div style={v.toast}>✓ Profilen sparad!</div>
+            <div style={v.toast}>✓ Profile saved!</div>
           )}
 
           {data.bio && (
-            <Section title="Om mig">
+            <Section title="About me">
               <p style={v.bio}>{data.bio}</p>
             </Section>
           )}
 
           {data.roles.length > 0 && (
-            <Section title="Roller">
+            <Section title="Roles">
               <div style={v.chipRow}>
                 {data.roles.map((role, i) => {
                   const c = roleColor(i);
@@ -215,7 +215,7 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
           )}
 
           {data.tools.length > 0 && (
-            <Section title="Verktyg & ramverk">
+            <Section title="Tools & frameworks">
               <div style={v.chipRow}>
                 {data.tools.map((tool) => (
                   <span key={tool} style={v.toolChip}>{tool}</span>
@@ -225,7 +225,7 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
           )}
 
           {(data.github || data.portfolio) && (
-            <Section title="Länkar">
+            <Section title="Links">
               <div style={v.links}>
                 {data.github && (
                   <a href={data.github} target="_blank" rel="noopener noreferrer" style={v.link}>
@@ -242,15 +242,15 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
           )}
 
           {!data.bio && data.roles.length === 0 && data.tools.length === 0 && (
-            <p style={v.empty}>Fyll i din profil så syns du för projektskapare.</p>
+            <p style={v.empty}>Fill in your profile so project creators can find you.</p>
           )}
         </div>
       </div>
 
       {!isPreview && (
         <div style={v.actions}>
-          <button style={v.editBtn} onClick={onEdit}>Redigera profil</button>
-          <button style={v.logoutBtn} onClick={onLogout}>Logga ut</button>
+          <button style={v.editBtn} onClick={onEdit}>Edit profile</button>
+          <button style={v.logoutBtn} onClick={onLogout}>Log out</button>
         </div>
       )}
     </div>
@@ -276,7 +276,7 @@ function AvatarBanner({ avatarUrl, name }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', alignItems: 'center' }}>
       <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>
         {title}
       </span>
@@ -377,22 +377,22 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
   return (
     <div style={e.page}>
       <div style={e.topBar}>
-        <button style={e.cancelBtn} onClick={onCancel}>← Tillbaka</button>
-        <h1 style={e.heading}>Redigera profil</h1>
+        <button style={e.cancelBtn} onClick={onCancel}>← Back</button>
+        <h1 style={e.heading}>Edit profile</h1>
       </div>
 
       <div style={e.form}>
 
-        {/* Avatar-väljare */}
-        <Field label="Profilbild">
+        {/* Avatar picker */}
+        <Field label="Profile picture">
           <div style={e.avatarRow}>
             <div style={{ position: 'relative', display: 'inline-flex' }}>
               <Avatar avatarUrl={draft.avatarUrl} name={draft.fullName} size={72} />
               {draft.avatarUrl && (
-                <button style={e.removeAvatar} onClick={() => set('avatarUrl', '')} title="Ta bort">×</button>
+                <button style={e.removeAvatar} onClick={() => set('avatarUrl', '')} title="Remove">×</button>
               )}
             </div>
-            <button style={e.changeAvatarBtn} onClick={openPicker}>Välj avatar</button>
+            <button style={e.changeAvatarBtn} onClick={openPicker}>Choose avatar</button>
           </div>
         </Field>
 
@@ -401,7 +401,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
           <div style={e.modalOverlay} onClick={() => setPickerOpen(false)}>
             <div style={e.modal} onClick={(ev) => ev.stopPropagation()}>
               <div style={e.modalHeader}>
-                <span style={e.modalTitle}>Välj profilbild</span>
+                <span style={e.modalTitle}>Choose profile picture</span>
                 <button style={e.modalClose} onClick={() => setPickerOpen(false)}>×</button>
               </div>
 
@@ -413,7 +413,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     style={{ ...e.pickerTab, ...(pickerTab === tab ? e.pickerTabActive : {}) }}
                     onClick={() => setPickerTab(tab)}
                   >
-                    {tab === 'emoji' ? 'Emoji-avatar' : 'Ladda upp foto'}
+                    {tab === 'emoji' ? 'Emoji avatar' : 'Upload photo'}
                   </button>
                 ))}
               </div>
@@ -426,9 +426,9 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     <Avatar avatarUrl={previewUrl} name={draft.fullName} size={80} />
                     <div style={e.previewControls}>
 
-                      {/* Bakgrundsfärg */}
+                      {/* Background color */}
                       <div style={e.colorRow}>
-                        <label style={e.colorLabel}>Bakgrund</label>
+                        <label style={e.colorLabel}>Background</label>
                         <div style={e.colorInputWrap}>
                           <input
                             type="color"
@@ -440,10 +440,10 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                         </div>
                       </div>
 
-                      {/* Textfärg — bara synlig när ingen emoji */}
+                      {/* Text color — only visible when no emoji */}
                       {!picker.emoji && (
                         <div style={e.colorRow}>
-                          <label style={e.colorLabel}>Textfärg</label>
+                          <label style={e.colorLabel}>Text color</label>
                           <div style={e.colorInputWrap}>
                             <input
                               type="color"
@@ -456,10 +456,10 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                         </div>
                       )}
 
-                      {/* Font — bara synlig när ingen emoji */}
+                      {/* Font — only visible when no emoji */}
                       {!picker.emoji && (
                         <div style={e.colorRow}>
-                          <label style={e.colorLabel}>Typsnitt</label>
+                          <label style={e.colorLabel}>Font</label>
                           <div style={{ display: 'flex', gap: 4 }}>
                             {FONTS.map((f) => (
                               <button
@@ -478,16 +478,16 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                         </div>
                       )}
 
-                      {/* Rensa emoji */}
+                      {/* Clear emoji */}
                       {picker.emoji && (
                         <button style={e.clearEmojiBtn} onClick={() => setPick('emoji', '')}>
-                          Använd initialer
+                          Use initials
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Emoji-grid */}
+                  {/* Emoji grid */}
                   <div style={e.emojiGrid}>
                     {EMOJIS.map((emoji) => (
                       <button
@@ -504,10 +504,10 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     ))}
                   </div>
 
-                  {/* Bekräfta */}
+                  {/* Confirm */}
                   <div style={{ padding: '0 16px 16px' }}>
                     <button style={e.confirmBtn} onClick={confirmEmojiPicker}>
-                      Använd denna avatar
+                      Use this avatar
                     </button>
                   </div>
                 </div>
@@ -525,18 +525,18 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    {uploading ? 'Laddar upp...' : '📷 Välj bild från enhet'}
+                    {uploading ? 'Uploading...' : '📷 Choose image from device'}
                   </button>
                   {uploadErr && <p style={e.uploadErr}>{uploadErr}</p>}
-                  <p style={e.uploadHint}>JPG, PNG eller GIF. Max 5 MB.</p>
+                  <p style={e.uploadHint}>JPG, PNG or GIF. Max 5 MB.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Namn */}
-        <Field label="Namn *">
+        {/* Name */}
+        <Field label="Name *">
           <input
             style={e.input}
             value={draft.fullName}
@@ -545,13 +545,13 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
           />
         </Field>
 
-        {/* Kön */}
-        <Field label="Kön">
+        {/* Gender */}
+        <Field label="Gender">
           <div style={e.radioGroup}>
             {[
-              { value: 'man',      label: 'Man' },
-              { value: 'kvinna',   label: 'Kvinna' },
-              { value: 'ej_uppge', label: 'Vill ej uppge' },
+              { value: 'man',      label: 'Male' },
+              { value: 'kvinna',   label: 'Female' },
+              { value: 'ej_uppge', label: 'Prefer not to say' },
             ].map(({ value, label }) => {
               const active = draft.gender === value;
               return (
@@ -571,7 +571,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
             style={e.input}
             value={draft.tagline}
             onChange={(ev) => set('tagline', ev.target.value)}
-            placeholder="T.ex. Fullstack-utvecklare som älskar SaaS"
+            placeholder="e.g. Fullstack developer who loves SaaS"
             maxLength={100}
           />
           <CharCount value={draft.tagline} max={100} />
@@ -583,15 +583,15 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
             style={{ ...e.input, resize: 'vertical', lineHeight: 1.55 }}
             value={draft.bio}
             onChange={(ev) => set('bio', ev.target.value)}
-            placeholder="Berätta om dig själv, dina intressen och vad du söker..."
+            placeholder="Tell us about yourself, your interests and what you're looking for..."
             rows={4}
             maxLength={500}
           />
           <CharCount value={draft.bio} max={500} />
         </Field>
 
-        {/* Roller */}
-        <Field label="Mina roller">
+        {/* Roles */}
+        <Field label="My roles">
           <div style={e.chipGrid}>
             {ROLES.map((role) => {
               const active = draft.roles.includes(role);
@@ -606,8 +606,8 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
           </div>
         </Field>
 
-        {/* Verktyg */}
-        <Field label="Verktyg & ramverk">
+        {/* Tools */}
+        <Field label="Tools & frameworks">
           <div style={e.chipGrid}>
             {TOOLS.map((tool) => {
               const active = draft.tools.includes(tool);
@@ -623,33 +623,33 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
         </Field>
 
         {/* GitHub */}
-        <Field label="GitHub-länk">
+        <Field label="GitHub link">
           <input
             style={e.input}
             type="url"
             value={draft.github}
             onChange={(ev) => set('github', ev.target.value)}
-            placeholder="https://github.com/användarnamn"
+            placeholder="https://github.com/username"
           />
         </Field>
 
         {/* Portfolio */}
-        <Field label="Portfolio-länk">
+        <Field label="Portfolio link">
           <input
             style={e.input}
             type="url"
             value={draft.portfolio}
             onChange={(ev) => set('portfolio', ev.target.value)}
-            placeholder="https://minportfolio.se"
+            placeholder="https://myportfolio.com"
           />
         </Field>
 
         {error && <p style={e.error}>{error}</p>}
 
         <div style={e.btnRow}>
-          <button style={e.previewBtn} type="button" onClick={onPreview}>Förhandsgranska</button>
+          <button style={e.previewBtn} type="button" onClick={onPreview}>Preview</button>
           <button style={e.saveBtn} type="button" onClick={onSave} disabled={saving}>
-            {saving ? 'Sparar...' : 'Spara'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -686,7 +686,10 @@ const v = {
     background: '#f7f7f9',
     minHeight: '100%',
     width: '100%',
+    maxWidth: 480,
     boxSizing: 'border-box',
+    alignSelf: 'stretch',
+    minWidth: 0,
   },
   previewBanner: {
     background: '#111',
@@ -745,19 +748,19 @@ const v = {
   },
   name: { margin: 0, fontSize: 24, fontWeight: 800, color: '#111', lineHeight: 1.1 },
   taglineOnAvatar: { margin: '4px 0 0', fontSize: 14, color: '#6b7280', fontWeight: 400 },
-  body: { padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box' },
+  body: { padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box', alignItems: 'center' },
   toast: {
     background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
-    borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 600, textAlign: 'center',
+    borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 600, textAlign: 'center', width: '100%',
   },
-  bio: { margin: 0, fontSize: 15, color: '#374151', lineHeight: 1.65 },
-  chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  bio: { margin: 0, fontSize: 15, color: '#374151', lineHeight: 1.65, width: '100%', textAlign: 'center' },
+  chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   chip: { padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
   toolChip: {
     padding: '6px 14px', borderRadius: 20, background: '#f1f5f9',
     color: '#475569', fontSize: 13, fontWeight: 500, border: '1px solid #e2e8f0',
   },
-  links: { display: 'flex', flexDirection: 'column', gap: 10 },
+  links: { display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' },
   link: { display: 'flex', alignItems: 'center', gap: 8, color: '#7c3aed', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   linkIcon: {
     width: 28, height: 28, borderRadius: '50%', background: '#ede9fe',
@@ -780,7 +783,7 @@ const v = {
 // STYLES — EDIT
 // ═══════════════════════════════════════════════════════════════════════════
 const e = {
-  page: { padding: '16px 16px 48px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box' },
+  page: { padding: '16px 16px 48px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 480, boxSizing: 'border-box', alignSelf: 'stretch', minWidth: 0 },
   topBar: { display: 'flex', alignItems: 'center', gap: 12 },
   cancelBtn: { background: 'none', border: 'none', color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0, flexShrink: 0 },
   heading: { margin: 0, fontSize: 20, fontWeight: 700, color: '#111' },

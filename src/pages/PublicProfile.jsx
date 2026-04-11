@@ -29,14 +29,14 @@ export default function PublicProfile() {
   }, [id]);
 
   if (loading) {
-    return <div style={styles.center}><span style={styles.muted}>Laddar profil...</span></div>;
+    return <div style={styles.center}><span style={styles.muted}>Loading profile...</span></div>;
   }
 
   if (notFound) {
     return (
       <div style={styles.center}>
-        <p style={styles.muted}>Profilen hittades inte.</p>
-        <button style={styles.backBtn} onClick={() => navigate(-1)}>Gå tillbaka</button>
+        <p style={styles.muted}>Profile not found.</p>
+        <button style={styles.backBtn} onClick={() => navigate(-1)}>Go back</button>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export default function PublicProfile() {
 
   return (
     <div style={styles.page}>
-      <button style={styles.back} onClick={() => navigate(-1)}>← Tillbaka</button>
+      <button style={styles.back} onClick={() => navigate(-1)}>← Back</button>
 
       {/* Header */}
       <div style={styles.header}>
@@ -59,14 +59,14 @@ export default function PublicProfile() {
 
       {/* Bio */}
       {profile.bio && (
-        <Section title="Om mig">
+        <Section title="About me">
           <p style={styles.bio}>{profile.bio}</p>
         </Section>
       )}
 
-      {/* Roller */}
+      {/* Roles */}
       {roles.length > 0 && (
-        <Section title="Roller">
+        <Section title="Roles">
           <div style={styles.chipGrid}>
             {roles.map((role) => (
               <span key={role} style={styles.chip}>{role}</span>
@@ -75,9 +75,9 @@ export default function PublicProfile() {
         </Section>
       )}
 
-      {/* Verktyg */}
+      {/* Tools */}
       {tools.length > 0 && (
-        <Section title="Verktyg & ramverk">
+        <Section title="Tools & frameworks">
           <div style={styles.chipGrid}>
             {tools.map((tool) => (
               <span key={tool} style={styles.toolChip}>{tool}</span>
@@ -86,9 +86,9 @@ export default function PublicProfile() {
         </Section>
       )}
 
-      {/* Länkar */}
+      {/* Links */}
       {(profile.github_url || profile.portfolio_url) && (
-        <Section title="Länkar">
+        <Section title="Links">
           <div style={styles.links}>
             {profile.github_url && (
               <a href={profile.github_url} target="_blank" rel="noopener noreferrer" style={styles.link}>

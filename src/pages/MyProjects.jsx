@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-const STAGE_LABEL = { idea: 'Idé', mvp: 'MVP', beta: 'Beta', growth: 'Tillväxt', scaling: 'Skalning' };
+const STAGE_LABEL = { idea: 'Idea', mvp: 'MVP', beta: 'Beta', growth: 'Growth', scaling: 'Scaling' };
 const STAGE_COLOR = {
   idea:    { bg: '#ede9fe', color: '#6d28d9' },
   mvp:     { bg: '#dbeafe', color: '#1e40af' },
@@ -42,7 +42,7 @@ export default function MyProjects() {
   }
 
   async function loadRequests(uid) {
-    // Hämta alla projekt som tillhör användaren
+    // Fetch all projects belonging to the user
     const { data: myProjects } = await supabase
       .from('projects')
       .select('id, title')
@@ -57,7 +57,7 @@ export default function MyProjects() {
     const projectIds = myProjects.map((p) => p.id);
     const projectMap = Object.fromEntries(myProjects.map((p) => [p.id, p.title]));
 
-    // Hämta interests + join med profiles (bara safe fält)
+    // Fetch interests + join with profiles (safe fields only)
     const { data: interests } = await supabase
       .from('interests')
       .select('id, user_id, project_id, created_at, profiles(full_name, tagline, roles)')
@@ -66,7 +66,7 @@ export default function MyProjects() {
 
     const enriched = (interests || []).map((r) => ({
       ...r,
-      projectTitle: projectMap[r.project_id] || 'Okänt projekt',
+      projectTitle: projectMap[r.project_id] || 'Unknown project',
     }));
 
     setRequests(enriched);
@@ -74,13 +74,13 @@ export default function MyProjects() {
   }
 
   async function handleMatch(interest) {
-    // Skapa rad i matches
+    // Create row in matches
     await supabase.from('matches').insert({
       project_id:    interest.project_id,
       requester_id:  interest.user_id,
       owner_id:      userId,
     });
-    // Ta bort från interests
+    // Remove from interests
     await supabase.from('interests').delete().eq('id', interest.id);
     setRequests((prev) => prev.filter((r) => r.id !== interest.id));
     setReqCount((c) => c - 1);
@@ -95,14 +95,14 @@ export default function MyProjects() {
   if (loading) {
     return (
       <div style={s.center}>
-        <span style={s.muted}>Laddar...</span>
+        <span style={s.muted}>Loading...</span>
       </div>
     );
   }
 
   return (
     <div style={s.page}>
-      <h1 style={s.heading}>Projekt</h1>
+      <h1 style={s.heading}>Projects</h1>
 
       {/* Tabs */}
       <div style={s.tabs}>
@@ -110,7 +110,7 @@ export default function MyProjects() {
           style={{ ...s.tab, ...(tab === 'projects' ? s.tabActive : {}) }}
           onClick={() => setTab('projects')}
         >
-          Mina projekt
+          My Projects
           <span style={{ ...s.badge, ...(tab === 'projects' ? s.badgeActive : {}) }}>
             {projects.length}
           </span>
@@ -119,7 +119,7 @@ export default function MyProjects() {
           style={{ ...s.tab, ...(tab === 'requests' ? s.tabActive : {}) }}
           onClick={() => setTab('requests')}
         >
-          Förfrågningar
+          Requests
           {reqCount > 0 && (
             <span style={{ ...s.badge, ...s.badgePing }}>
               {reqCount}
@@ -142,14 +142,14 @@ export default function MyProjects() {
   );
 }
 
-// ─── Mina projekt ─────────────────────────────────────────────────────────
+// ─── My Projects ──────────────────────────────────────────────────────────
 function ProjectsList({ projects }) {
   if (projects.length === 0) {
     return (
       <div style={s.empty}>
         <span style={s.emptyIcon}>📁</span>
-        <p style={s.emptyTitle}>Inga projekt än</p>
-        <p style={s.emptyText}>Gå till Skapa-fliken för att publicera ditt första projekt.</p>
+        <p style={s.emptyTitle}>No projects yet</p>
+        <p style={s.emptyText}>Go to the Create tab to publish your first project.</p>
       </div>
     );
   }
@@ -177,7 +177,7 @@ function ProjectsList({ projects }) {
 
             <div style={s.cardMeta}>
               {p.hours_per_week && (
-                <span style={s.metaChip}>⏱ {p.hours_per_week}h/v</span>
+                <span style={s.metaChip}>⏱ {p.hours_per_week}h/wk</span>
               )}
             </div>
 
@@ -195,17 +195,17 @@ function ProjectsList({ projects }) {
   );
 }
 
-// ─── Förfrågningar ────────────────────────────────────────────────────────
+// ─── Requests ─────────────────────────────────────────────────────────────
 function RequestsList({ requests, onMatch, onDismiss }) {
   const navigate = useNavigate();
-  const [busy, setBusy] = useState(null); // id av pågående action
+  const [busy, setBusy] = useState(null); // id of ongoing action
 
   if (requests.length === 0) {
     return (
       <div style={s.empty}>
         <span style={s.emptyIcon}>💌</span>
-        <p style={s.emptyTitle}>Inga förfrågningar</p>
-        <p style={s.emptyText}>När någon swiper höger på dina projekt dyker de upp här.</p>
+        <p style={s.emptyTitle}>No requests</p>
+        <p style={s.emptyText}>When someone swipes right on your projects they'll appear here.</p>
       </div>
     );
   }
@@ -220,7 +220,7 @@ function RequestsList({ requests, onMatch, onDismiss }) {
     <div style={s.list}>
       {requests.map((req) => {
         const profile  = req.profiles || {};
-        const name     = profile.full_name || 'Okänd användare';
+        const name     = profile.full_name || 'Unknown user';
         const tagline  = profile.tagline   || null;
         const roles    = Array.isArray(profile.roles) ? profile.roles : [];
         const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -264,14 +264,14 @@ function RequestsList({ requests, onMatch, onDismiss }) {
                 onClick={() => act(() => onDismiss(req.id), req.id)}
                 disabled={isBusy}
               >
-                Avvisa
+                Decline
               </button>
               <button
                 style={{ ...s.matchBtn, opacity: isBusy ? 0.5 : 1 }}
                 onClick={() => act(() => onMatch(req), req.id)}
                 disabled={isBusy}
               >
-                ♥ Matcha
+                ♥ Match
               </button>
             </div>
           </div>
