@@ -70,6 +70,9 @@ export default function Chat() {
 
       setMessages(msgs || []);
       setLoading(false);
+
+      // Mark chat as read
+      localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
     }
 
     load();
@@ -93,6 +96,8 @@ export default function Chat() {
             if (prev.find((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
+          // Mark as read since chat is open
+          localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
         }
       )
       .subscribe();
