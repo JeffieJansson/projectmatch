@@ -27,7 +27,7 @@ export default function Explore() {
 
       const seenIds = (seen || []).map((r) => r.project_id);
 
-      let query = supabase.from('projects').select('*').limit(50);
+      let query = supabase.from('projects').select('*').neq('creator_id', user.id).limit(50);
       if (seenIds.length > 0) {
         query = query.not('id', 'in', `(${seenIds.join(',')})`);
       }
