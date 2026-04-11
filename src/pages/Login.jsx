@@ -28,21 +28,21 @@ export default function Login() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.logo}>ProjectMatch</h1>
-        <p style={styles.tagline}>Hitta ditt drömteam</p>
+        <p style={styles.tagline}>Find your dream team</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>E-post</label>
+          <label style={styles.label}>Email</label>
           <input
             style={styles.input}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="din@email.com"
+            placeholder="your@email.com"
             required
             autoComplete="email"
           />
 
-          <label style={styles.label}>Lösenord</label>
+          <label style={styles.label}>Password</label>
           <input
             style={styles.input}
             type="password"
@@ -56,14 +56,14 @@ export default function Login() {
           {error && <p style={styles.error}>{error}</p>}
 
           <button style={styles.button} type="submit" disabled={loading}>
-            {loading ? 'Loggar in...' : 'Logga in'}
+            {loading ? 'Logging in...' : 'Log in'}
           </button>
         </form>
 
         <p style={styles.footer}>
-          Inget konto?{' '}
+          No account?{' '}
           <Link to="/register" style={styles.link}>
-            Registrera dig
+            Register
           </Link>
         </p>
       </div>

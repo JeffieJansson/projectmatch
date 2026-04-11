@@ -16,11 +16,11 @@ export default function Register() {
     setError('');
 
     if (password !== confirm) {
-      setError('Lösenorden matchar inte.');
+      setError("Passwords don't match.");
       return;
     }
     if (password.length < 6) {
-      setError('Lösenordet måste vara minst 6 tecken.');
+      setError('Password must be at least 6 characters.');
       return;
     }
 
@@ -47,43 +47,43 @@ export default function Register() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.logo}>ProjectMatch</h1>
-        <p style={styles.tagline}>Skapa ditt konto</p>
+        <p style={styles.tagline}>Create your account</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Namn</label>
+          <label style={styles.label}>Name</label>
           <input
             style={styles.input}
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Anna Svensson"
+            placeholder="Jane Smith"
             required
             autoComplete="name"
           />
 
-          <label style={styles.label}>E-post</label>
+          <label style={styles.label}>Email</label>
           <input
             style={styles.input}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="din@email.com"
+            placeholder="your@email.com"
             required
             autoComplete="email"
           />
 
-          <label style={styles.label}>Lösenord</label>
+          <label style={styles.label}>Password</label>
           <input
             style={styles.input}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minst 6 tecken"
+            placeholder="At least 6 characters"
             required
             autoComplete="new-password"
           />
 
-          <label style={styles.label}>Bekräfta lösenord</label>
+          <label style={styles.label}>Confirm password</label>
           <input
             style={styles.input}
             type="password"
@@ -97,14 +97,14 @@ export default function Register() {
           {error && <p style={styles.error}>{error}</p>}
 
           <button style={styles.button} type="submit" disabled={loading}>
-            {loading ? 'Skapar konto...' : 'Skapa konto'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
         <p style={styles.footer}>
-          Har du redan ett konto?{' '}
+          Already have an account?{' '}
           <Link to="/login" style={styles.link}>
-            Logga in
+            Log in
           </Link>
         </p>
       </div>
