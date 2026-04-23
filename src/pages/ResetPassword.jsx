@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [ready, setReady] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    // Covers remount case: if recovery session already exists when component mounts
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
+    // Covers initial mount case: PASSWORD_RECOVERY fires before session is stored
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,8 +40,19 @@ export default function ResetPassword() {
       setError(error.message);
     } else {
       setDone(true);
-      setTimeout(() => navigate('/login'), 2500);
+      setTimeout(() => navigate('/explore'), 2000);
     }
+  }
+
+  if (!ready) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <h1 style={styles.logo}>ProjectMatch</h1>
+          <p style={styles.tagline}>Verifying reset link...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -37,7 +63,7 @@ export default function ResetPassword() {
 
         {done ? (
           <div style={styles.successBox}>
-            <p style={styles.successText}>Password updated! Redirecting to login...</p>
+            <p style={styles.successText}>Password updated! Redirecting...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={styles.form}>

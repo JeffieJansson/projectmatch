@@ -45,8 +45,12 @@ export default function App() {
       .then(({ data }) => setOnboardingDone(!!data?.onboarding_completed));
   }, [session?.user?.id]);
 
+  // Skip loading guard for reset-password so the recovery token in the URL hash
+  // can be processed by the page itself without being redirected or unmounted.
+  const isResetPath = window.location.pathname === '/reset-password';
+
   // Still loading auth or profile
-  if (session === undefined || (session && onboardingDone === undefined)) return null;
+  if (!isResetPath && (session === undefined || (session && onboardingDone === undefined))) return null;
 
   return (
     <BrowserRouter>
