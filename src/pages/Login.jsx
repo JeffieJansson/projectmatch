@@ -52,6 +52,7 @@ export default function Login() {
             required
             autoComplete="current-password"
           />
+          <Link to="/forgot-password" style={styles.forgotLink}>Forgot password?</Link>
 
           {error && <p style={styles.error}>{error}</p>}
 
@@ -62,9 +63,7 @@ export default function Login() {
 
         <p style={styles.footer}>
           No account?{' '}
-          <Link to="/register" style={styles.link}>
-            Register
-          </Link>
+          <Link to="/register" style={styles.link}>Register</Link>
         </p>
       </div>
     </div>
@@ -78,27 +77,28 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '24px 16px',
-    background: '#f9f9fb',
+    background: '#0d0920',
   },
   card: {
     width: '100%',
     maxWidth: 400,
-    background: '#fff',
-    borderRadius: 16,
+    background: '#160d2e',
+    borderRadius: 20,
     padding: '40px 32px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(139,92,246,0.2)',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
   },
   logo: {
     margin: '0 0 4px',
     fontSize: 28,
-    fontWeight: 700,
-    color: '#7c3aed',
+    fontWeight: 800,
+    color: '#a78bfa',
     textAlign: 'center',
   },
   tagline: {
     margin: '0 0 32px',
     fontSize: 14,
-    color: '#888',
+    color: '#64748b',
     textAlign: 'center',
   },
   form: {
@@ -109,22 +109,24 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#444',
+    color: '#94a3b8',
     marginTop: 8,
   },
   input: {
     padding: '12px 14px',
     borderRadius: 10,
-    border: '1.5px solid #e5e7eb',
+    border: '1.5px solid rgba(139,92,246,0.2)',
     fontSize: 15,
     outline: 'none',
-    transition: 'border-color 0.2s',
+    background: '#1a1035',
+    color: '#f1f5f9',
+    fontFamily: 'inherit',
   },
   error: {
     margin: '4px 0',
     fontSize: 13,
-    color: '#ef4444',
-    background: '#fef2f2',
+    color: '#f87171',
+    background: 'rgba(239,68,68,0.1)',
     padding: '8px 12px',
     borderRadius: 8,
   },
@@ -133,21 +135,29 @@ const styles = {
     padding: '13px',
     borderRadius: 10,
     border: 'none',
-    background: '#7c3aed',
+    background: '#8b5cf6',
     color: '#fff',
     fontSize: 16,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
   },
   footer: {
     marginTop: 24,
     textAlign: 'center',
     fontSize: 14,
-    color: '#888',
+    color: '#64748b',
   },
   link: {
-    color: '#7c3aed',
+    color: '#a78bfa',
     fontWeight: 600,
     textDecoration: 'none',
+  },
+  forgotLink: {
+    fontSize: 13,
+    color: '#64748b',
+    textDecoration: 'none',
+    textAlign: 'right',
+    marginTop: -2,
   },
 };
