@@ -11,6 +11,9 @@ import PublicProfile from './pages/PublicProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
+import EditProject from './pages/EditProject';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import BottomNav from './components/BottomNav';
 
 export default function App() {
@@ -59,6 +62,10 @@ export default function App() {
             element={session ? <Navigate to={onboardingDone ? '/explore' : '/onboarding'} replace /> : <Register />}
           />
 
+          {/* Public auth helpers */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           {/* Onboarding – protected, no BottomNav */}
           <Route
             path="/onboarding"
@@ -86,6 +93,7 @@ export default function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:id" element={<PublicProfile />} />
                     <Route path="/chat/:matchId" element={<Chat />} />
+                    <Route path="/edit-project/:id" element={<EditProject />} />
                   </Routes>
                 </main>
                 <BottomNav />

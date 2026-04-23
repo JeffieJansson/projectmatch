@@ -8,7 +8,7 @@ export default function Explore() {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState(null); // 'like' | 'skip'
+  const [feedback, setFeedback] = useState(null);
 
   // Drag-state
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -296,11 +296,11 @@ const styles = {
     margin: 0,
     fontSize: 22,
     fontWeight: 700,
-    color: '#111',
+    color: '#f1f5f9',
   },
   counter: {
     fontSize: 13,
-    color: '#9ca3af',
+    color: '#64748b',
   },
   stack: {
     flex: 1,
@@ -331,16 +331,16 @@ const styles = {
   },
   likeBadge: {
     left: 16,
-    color: '#16a34a',
-    borderColor: '#16a34a',
-    background: 'rgba(240,253,244,0.9)',
+    color: '#4ade80',
+    borderColor: '#4ade80',
+    background: 'rgba(74,222,128,0.1)',
     transform: 'rotate(-8deg)',
   },
   skipBadge: {
     right: 16,
-    color: '#dc2626',
-    borderColor: '#dc2626',
-    background: 'rgba(254,242,242,0.9)',
+    color: '#f87171',
+    borderColor: '#f87171',
+    background: 'rgba(248,113,113,0.1)',
     transform: 'rotate(8deg)',
   },
   buttons: {
@@ -363,12 +363,14 @@ const styles = {
     transition: 'transform 0.15s',
   },
   skipBtn: {
-    background: '#fff',
-    color: '#ef4444',
+    background: '#1a1035',
+    color: '#f87171',
+    border: '1.5px solid rgba(248,113,113,0.3)',
   },
   likeBtn: {
-    background: '#7c3aed',
+    background: '#8b5cf6',
     color: '#fff',
+    boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
   },
   center: {
     flex: 1,
@@ -380,20 +382,21 @@ const styles = {
     gap: 8,
   },
   loadingText: {
-    color: '#9ca3af',
+    color: '#64748b',
     fontSize: 15,
   },
   emptyIcon: { fontSize: 48 },
-  emptyTitle: { margin: 0, fontSize: 20, fontWeight: 700, color: '#111' },
-  emptyText: { margin: 0, color: '#9ca3af', fontSize: 14, textAlign: 'center' },
+  emptyTitle: { margin: 0, fontSize: 20, fontWeight: 700, color: '#f1f5f9' },
+  emptyText: { margin: 0, color: '#64748b', fontSize: 14, textAlign: 'center' },
 };
 
 const card = {
   root: {
     height: '100%',
     borderRadius: 20,
-    background: '#fff',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+    background: '#160d2e',
+    border: '1px solid rgba(139,92,246,0.15)',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
@@ -427,14 +430,14 @@ const card = {
     margin: 0,
     fontSize: 22,
     fontWeight: 700,
-    color: '#111',
+    color: '#f1f5f9',
     lineHeight: 1.2,
     textAlign: 'center',
   },
   description: {
     margin: 0,
     fontSize: 14,
-    color: '#555',
+    color: '#94a3b8',
     lineHeight: 1.55,
     textAlign: 'center',
   },
@@ -446,8 +449,8 @@ const card = {
   },
   chip: {
     fontSize: 13,
-    color: '#6b7280',
-    background: '#f3f4f6',
+    color: '#94a3b8',
+    background: '#1a1035',
     padding: '4px 10px',
     borderRadius: 20,
   },
@@ -462,7 +465,7 @@ const card = {
     margin: 0,
     fontSize: 12,
     fontWeight: 600,
-    color: '#9ca3af',
+    color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -475,8 +478,8 @@ const card = {
   },
   tag: {
     fontSize: 13,
-    background: '#ede9fe',
-    color: '#6d28d9',
+    background: '#2d1b69',
+    color: '#c4b5fd',
     padding: '4px 12px',
     borderRadius: 20,
     fontWeight: 500,

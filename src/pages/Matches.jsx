@@ -6,24 +6,15 @@ import Avatar from '../components/Avatar';
 export default function Matches() {
   const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
-  const [userId, setUserId]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user.id);
 
-      // Fetch matches where the user is owner or requester
       const { data } = await supabase
         .from('matches')
-        .select(`
-          id,
-          owner_id,
-          requester_id,
-          created_at,
-          projects(title)
-        `)
+        .select('id, owner_id, requester_id, created_at, projects(title)')
         .or(`owner_id.eq.${user.id},requester_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
@@ -33,19 +24,14 @@ export default function Matches() {
         return;
       }
 
-      // Fetch the other person's profile for each match
       const enriched = await Promise.all(
         data.map(async (match) => {
-          const otherId = match.owner_id === user.id
-            ? match.requester_id
-            : match.owner_id;
-
+          const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, full_name, tagline, roles, avatar_url')
             .eq('id', otherId)
             .single();
-
           return { ...match, other: profile || { id: otherId, full_name: 'Unknown' } };
         })
       );
@@ -57,11 +43,7 @@ export default function Matches() {
   }, []);
 
   if (loading) {
-    return (
-      <div style={s.center}>
-        <span style={s.muted}>Loading matches...</span>
-      </div>
-    );
+    return <div style={s.center}><span style={s.muted}>Loading matches...</span></div>;
   }
 
   if (matches.length === 0) {
@@ -71,9 +53,7 @@ export default function Matches() {
         <div style={s.empty}>
           <span style={s.emptyIcon}>💜</span>
           <p style={s.emptyTitle}>No matches yet</p>
-          <p style={s.emptyText}>
-            When a project creator accepts your request they'll appear here.
-          </p>
+          <p style={s.emptyText}>When a project creator accepts your request they'll appear here.</p>
         </div>
       </div>
     );
@@ -89,13 +69,8 @@ export default function Matches() {
           const project = match.projects?.title || null;
 
           return (
-            <button
-              key={match.id}
-              style={s.card}
-              onClick={() => navigate(`/chat/${match.id}`)}
-            >
+            <button key={match.id} style={s.card} onClick={() => navigate(`/chat/${match.id}`)}>
               <Avatar avatarUrl={match.other.avatar_url} name={name} size={50} />
-
               <div style={s.info}>
                 <span style={s.name}>{name}</span>
                 {tagline && <span style={s.tagline}>{tagline}</span>}
@@ -106,7 +81,6 @@ export default function Matches() {
                   </span>
                 )}
               </div>
-
               <span style={s.arrow}>›</span>
             </button>
           );
@@ -117,91 +91,32 @@ export default function Matches() {
 }
 
 const s = {
-  page: {
-    padding: '24px 16px 48px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 16,
-  },
-  center: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-  },
-  muted: { color: '#9ca3af', fontSize: 15 },
-  heading: {
-    margin: 0,
-    fontSize: 22,
-    fontWeight: 700,
-    color: '#111',
-  },
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10,
-  },
+  page: { padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 16 },
+  center: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' },
+  muted: { color: '#64748b', fontSize: 15 },
+  heading: { margin: 0, fontSize: 22, fontWeight: 700, color: '#f1f5f9' },
+  list: { display: 'flex', flexDirection: 'column', gap: 10 },
   card: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
-    background: '#fff',
-    border: 'none',
+    background: '#160d2e',
+    border: '1px solid rgba(139,92,246,0.15)',
     borderRadius: 16,
     padding: '14px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
     cursor: 'pointer',
     textAlign: 'left',
     width: '100%',
   },
-  info: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 3,
-    minWidth: 0,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: '#111',
-  },
-  tagline: {
-    fontSize: 13,
-    color: '#6b7280',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  projectLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 5,
-    fontSize: 12,
-    color: '#7c3aed',
-    fontWeight: 600,
-  },
-  projectDot: {
-    width: 5,
-    height: 5,
-    borderRadius: '50%',
-    background: '#7c3aed',
-    flexShrink: 0,
-  },
-  arrow: {
-    fontSize: 22,
-    color: '#d1d5db',
-    flexShrink: 0,
-  },
-  empty: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '64px 24px',
-    gap: 8,
-  },
+  info: { flex: 1, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 },
+  name: { fontSize: 16, fontWeight: 700, color: '#f1f5f9' },
+  tagline: { fontSize: 13, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  projectLabel: { display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#a78bfa', fontWeight: 600 },
+  projectDot: { width: 5, height: 5, borderRadius: '50%', background: '#8b5cf6', flexShrink: 0 },
+  arrow: { fontSize: 22, color: '#4a3a6e', flexShrink: 0 },
+  empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 24px', gap: 8 },
   emptyIcon: { fontSize: 48 },
-  emptyTitle: { margin: 0, fontSize: 18, fontWeight: 700, color: '#111' },
-  emptyText: { margin: 0, fontSize: 14, color: '#9ca3af', textAlign: 'center', lineHeight: 1.6 },
+  emptyTitle: { margin: 0, fontSize: 18, fontWeight: 700, color: '#f1f5f9' },
+  emptyText: { margin: 0, fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 1.6 },
 };

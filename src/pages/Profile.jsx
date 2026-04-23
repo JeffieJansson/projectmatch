@@ -24,16 +24,16 @@ const EMOJIS = [
 ];
 
 const ROLE_COLORS = [
-  { bg: '#ede9fe', color: '#6d28d9' },
-  { bg: '#fce7f3', color: '#9d174d' },
-  { bg: '#d1fae5', color: '#065f46' },
-  { bg: '#dbeafe', color: '#1e40af' },
-  { bg: '#fef3c7', color: '#92400e' },
-  { bg: '#fee2e2', color: '#991b1b' },
-  { bg: '#e0f2fe', color: '#0369a1' },
-  { bg: '#f3e8ff', color: '#7e22ce' },
-  { bg: '#dcfce7', color: '#166534' },
-  { bg: '#fdf4ff', color: '#86198f' },
+  { bg: '#2d1b69', color: '#c4b5fd' },
+  { bg: '#3b1a38', color: '#f0abfc' },
+  { bg: '#0f2e1e', color: '#6ee7b7' },
+  { bg: '#0f1e3b', color: '#93c5fd' },
+  { bg: '#2e1f0a', color: '#fcd34d' },
+  { bg: '#2e0f0f', color: '#fca5a5' },
+  { bg: '#0a2535', color: '#7dd3fc' },
+  { bg: '#261430', color: '#e879f9' },
+  { bg: '#0a2518', color: '#86efac' },
+  { bg: '#28112e', color: '#f0abfc' },
 ];
 
 function roleColor(index) {
@@ -133,7 +133,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-        <span style={{ color: '#9ca3af', fontSize: 15 }}>Loading profile...</span>
+        <span style={{ color: '#64748b', fontSize: 15 }}>Loading profile...</span>
       </div>
     );
   }
@@ -244,15 +244,15 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
           {!data.bio && data.roles.length === 0 && data.tools.length === 0 && (
             <p style={v.empty}>Fill in your profile so project creators can find you.</p>
           )}
+
+          {!isPreview && (
+            <div style={v.actions}>
+              <button style={v.editBtn} onClick={onEdit}>Edit profile</button>
+              <button style={v.logoutBtn} onClick={onLogout}>Log out</button>
+            </div>
+          )}
         </div>
       </div>
-
-      {!isPreview && (
-        <div style={v.actions}>
-          <button style={v.editBtn} onClick={onEdit}>Edit profile</button>
-          <button style={v.logoutBtn} onClick={onLogout}>Log out</button>
-        </div>
-      )}
     </div>
   );
 }
@@ -277,7 +277,7 @@ function AvatarBanner({ avatarUrl, name }) {
 function Section({ title, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', alignItems: 'center' }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>
         {title}
       </span>
       {children}
@@ -578,7 +578,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
               return (
                 <label key={role} style={{ ...e.chip, ...(active ? e.chipRoleActive : {}) }}>
                   <input type="checkbox" checked={active} onChange={() => toggleRole(role)} style={{ display: 'none' }} />
-                  {active && <span style={{ color: '#6d28d9', fontWeight: 700 }}>✓ </span>}
+                  {active && <span style={{ color: '#c4b5fd', fontWeight: 700 }}>✓ </span>}
                   {role}
                 </label>
               );
@@ -594,7 +594,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
               return (
                 <label key={tool} style={{ ...e.chip, ...(active ? e.chipToolActive : {}) }}>
                   <input type="checkbox" checked={active} onChange={() => toggleTool(tool)} style={{ display: 'none' }} />
-                  {active && <span style={{ color: '#0891b2', fontWeight: 700 }}>✓ </span>}
+                  {active && <span style={{ color: '#38bdf8', fontWeight: 700 }}>✓ </span>}
                   {tool}
                 </label>
               );
@@ -640,7 +640,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
 function Field({ label, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{label}</label>
+      <label style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>{label}</label>
       {children}
     </div>
   );
@@ -648,7 +648,7 @@ function Field({ label, children }) {
 
 function CharCount({ value, max }) {
   return (
-    <span style={{ fontSize: 12, color: '#9ca3af', textAlign: 'right', marginTop: -4 }}>
+    <span style={{ fontSize: 12, color: '#64748b', textAlign: 'right', marginTop: -4 }}>
       {value.length} / {max}
     </span>
   );
@@ -663,7 +663,7 @@ const v = {
     flexDirection: 'column',
     gap: 0,
     paddingBottom: 32,
-    background: '#f7f7f9',
+    background: '#0d0920',
     minHeight: '100%',
     width: '100%',
     maxWidth: 480,
@@ -672,20 +672,21 @@ const v = {
     minWidth: 0,
   },
   previewBanner: {
-    background: '#111',
-    color: '#fff',
+    background: '#160d2e',
+    color: '#f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 16px',
     gap: 8,
     flexShrink: 0,
+    borderBottom: '1px solid rgba(139,92,246,0.15)',
   },
   previewLabel: { fontSize: 13, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' },
   previewBack: {
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    color: '#fff',
+    background: 'rgba(139,92,246,0.15)',
+    border: '1px solid rgba(139,92,246,0.3)',
+    color: '#a78bfa',
     fontSize: 13,
     fontWeight: 600,
     padding: '6px 12px',
@@ -693,19 +694,20 @@ const v = {
     cursor: 'pointer',
   },
   card: {
-    background: '#fff',
+    background: '#160d2e',
     borderRadius: '0 0 24px 24px',
     overflow: 'hidden',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
     margin: '0 0 16px',
     width: '100%',
     boxSizing: 'border-box',
+    border: '1px solid rgba(139,92,246,0.15)',
   },
   avatarWrap: {
     position: 'relative',
     height: 220,
     width: '100%',
-    background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #4f46e5 100%)',
+    background: 'linear-gradient(160deg, #1a1035 0%, #2d1b69 60%, #1e1547 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -718,7 +720,7 @@ const v = {
     left: 0,
     right: 0,
     height: 80,
-    background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)',
+    background: 'linear-gradient(to top, rgba(22,13,46,0.97), transparent)',
   },
   avatarName: {
     position: 'absolute',
@@ -726,36 +728,36 @@ const v = {
     left: 20,
     right: 20,
   },
-  name: { margin: 0, fontSize: 24, fontWeight: 800, color: '#111', lineHeight: 1.1 },
-  taglineOnAvatar: { margin: '4px 0 0', fontSize: 14, color: '#6b7280', fontWeight: 400 },
+  name: { margin: 0, fontSize: 24, fontWeight: 800, color: '#f1f5f9', lineHeight: 1.1 },
+  taglineOnAvatar: { margin: '4px 0 0', fontSize: 14, color: '#94a3b8', fontWeight: 400 },
   body: { padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box', alignItems: 'center' },
   toast: {
-    background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
+    background: 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)',
     borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 600, textAlign: 'center', width: '100%',
   },
-  bio: { margin: 0, fontSize: 15, color: '#374151', lineHeight: 1.65, width: '100%', textAlign: 'center' },
+  bio: { margin: 0, fontSize: 15, color: '#94a3b8', lineHeight: 1.65, width: '100%', textAlign: 'center' },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   chip: { padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
   toolChip: {
-    padding: '6px 14px', borderRadius: 20, background: '#f1f5f9',
-    color: '#475569', fontSize: 13, fontWeight: 500, border: '1px solid #e2e8f0',
+    padding: '6px 14px', borderRadius: 20, background: '#0c2a3a',
+    color: '#38bdf8', fontSize: 13, fontWeight: 500, border: '1px solid rgba(56,189,248,0.2)',
   },
   links: { display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' },
-  link: { display: 'flex', alignItems: 'center', gap: 8, color: '#7c3aed', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
+  link: { display: 'flex', alignItems: 'center', gap: 8, color: '#a78bfa', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   linkIcon: {
-    width: 28, height: 28, borderRadius: '50%', background: '#ede9fe',
+    width: 28, height: 28, borderRadius: '50%', background: '#2d1b69',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
   },
-  empty: { margin: 0, fontSize: 14, color: '#9ca3af', textAlign: 'center', padding: '16px 0' },
-  actions: { padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box' },
+  empty: { margin: 0, fontSize: 14, color: '#64748b', textAlign: 'center', padding: '16px 0' },
+  actions: { padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%', boxSizing: 'border-box' },
   editBtn: {
-    width: '100%', padding: '14px', borderRadius: 14, border: 'none',
-    background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
+    width: '70%', padding: '11px', borderRadius: 12, border: 'none',
+    background: '#8b5cf6', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
   },
   logoutBtn: {
-    width: '100%', padding: '13px', borderRadius: 14, border: '1.5px solid #e5e7eb',
-    background: '#fff', color: '#9ca3af', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+    width: '70%', padding: '10px', borderRadius: 12, border: '1.5px solid rgba(139,92,246,0.2)',
+    background: 'transparent', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer',
   },
 };
 
@@ -763,14 +765,14 @@ const v = {
 // STYLES — EDIT
 // ═══════════════════════════════════════════════════════════════════════════
 const e = {
-  page: { padding: '16px 16px 48px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 480, boxSizing: 'border-box', alignSelf: 'stretch', minWidth: 0 },
+  page: { padding: '16px 16px 48px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 480, boxSizing: 'border-box', alignSelf: 'stretch', minWidth: 0, background: '#0d0920' },
   topBar: { display: 'flex', alignItems: 'center', gap: 12 },
-  cancelBtn: { background: 'none', border: 'none', color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0, flexShrink: 0 },
-  heading: { margin: 0, fontSize: 20, fontWeight: 700, color: '#111' },
+  cancelBtn: { background: 'none', border: 'none', color: '#a78bfa', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0, flexShrink: 0 },
+  heading: { margin: 0, fontSize: 20, fontWeight: 700, color: '#f1f5f9' },
   form: { display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box' },
   input: {
-    padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 15,
-    outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', color: '#111', background: '#fff',
+    padding: '12px 14px', borderRadius: 10, border: '1.5px solid rgba(139,92,246,0.2)', fontSize: 15,
+    outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', color: '#f1f5f9', background: '#1a1035',
   },
 
   // Avatar picker
@@ -794,9 +796,9 @@ const e = {
   changeAvatarBtn: {
     padding: '10px 18px',
     borderRadius: 10,
-    border: '1.5px solid #7c3aed',
-    background: '#fff',
-    color: '#7c3aed',
+    border: '1.5px solid rgba(139,92,246,0.4)',
+    background: 'transparent',
+    color: '#a78bfa',
     fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
@@ -806,14 +808,14 @@ const e = {
   modalOverlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0,0,0,0.5)',
+    background: 'rgba(0,0,0,0.7)',
     display: 'flex',
     alignItems: 'flex-end',
     justifyContent: 'center',
     zIndex: 1000,
   },
   modal: {
-    background: '#fff',
+    background: '#160d2e',
     borderRadius: '20px 20px 0 0',
     width: '100%',
     maxWidth: 480,
@@ -821,17 +823,19 @@ const e = {
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
+    border: '1px solid rgba(139,92,246,0.2)',
+    borderBottom: 'none',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '16px 20px 12px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid rgba(139,92,246,0.15)',
     flexShrink: 0,
   },
-  modalTitle: { fontSize: 16, fontWeight: 700, color: '#111' },
-  modalClose: { background: 'none', border: 'none', fontSize: 22, color: '#9ca3af', cursor: 'pointer', padding: 0, lineHeight: 1 },
+  modalTitle: { fontSize: 16, fontWeight: 700, color: '#f1f5f9' },
+  modalClose: { background: 'none', border: 'none', fontSize: 22, color: '#64748b', cursor: 'pointer', padding: 0, lineHeight: 1 },
   // Emoji panel
   emojiPanel: {
     display: 'flex',
@@ -844,7 +848,7 @@ const e = {
     alignItems: 'flex-start',
     gap: 16,
     padding: '16px 16px 12px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid rgba(139,92,246,0.15)',
   },
   previewControls: {
     flex: 1,
@@ -861,7 +865,7 @@ const e = {
   colorLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#374151',
+    color: '#94a3b8',
     flexShrink: 0,
   },
   colorInputWrap: {
@@ -873,7 +877,7 @@ const e = {
     width: 36,
     height: 36,
     borderRadius: 8,
-    border: '1.5px solid #e5e7eb',
+    border: '1.5px solid rgba(139,92,246,0.2)',
     padding: 2,
     cursor: 'pointer',
     background: 'none',
@@ -881,26 +885,26 @@ const e = {
   colorHex: {
     fontSize: 12,
     fontFamily: 'monospace',
-    color: '#6b7280',
+    color: '#64748b',
   },
   fontBtn: {
     padding: '5px 10px',
     borderRadius: 8,
-    border: '1.5px solid #e5e7eb',
-    background: '#fff',
+    border: '1.5px solid rgba(139,92,246,0.2)',
+    background: '#1a1035',
     fontSize: 12,
     cursor: 'pointer',
-    color: '#374151',
+    color: '#94a3b8',
   },
   fontBtnActive: {
-    border: '1.5px solid #7c3aed',
-    background: '#ede9fe',
-    color: '#6d28d9',
+    border: '1.5px solid #8b5cf6',
+    background: '#2d1b69',
+    color: '#c4b5fd',
   },
   clearEmojiBtn: {
     background: 'none',
     border: 'none',
-    color: '#9ca3af',
+    color: '#64748b',
     fontSize: 12,
     cursor: 'pointer',
     textDecoration: 'underline',
@@ -920,59 +924,62 @@ const e = {
     cursor: 'pointer',
     lineHeight: 1,
     transition: 'transform 0.1s',
+    background: 'transparent',
+    border: 'none',
   },
   confirmBtn: {
     width: '100%',
     padding: '13px',
     borderRadius: 12,
     border: 'none',
-    background: '#7c3aed',
+    background: '#8b5cf6',
     color: '#fff',
     fontSize: 15,
     fontWeight: 700,
     cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
   },
   uploadInlineBtn: {
     padding: '11px',
     borderRadius: 10,
-    border: '1.5px solid #e5e7eb',
-    background: '#fff',
-    color: '#6b7280',
+    border: '1.5px solid rgba(139,92,246,0.2)',
+    background: 'transparent',
+    color: '#64748b',
     fontSize: 14,
     fontWeight: 500,
     cursor: 'pointer',
     textAlign: 'center',
   },
-  uploadErr: { margin: 0, fontSize: 13, color: '#ef4444' },
+  uploadErr: { margin: 0, fontSize: 13, color: '#f87171' },
 
   // Radio
   radioGroup: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   radioBtn: {
     display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px',
-    borderRadius: 20, border: '1.5px solid #e5e7eb', background: '#fff',
-    fontSize: 14, fontWeight: 500, color: '#374151', cursor: 'pointer', userSelect: 'none',
+    borderRadius: 20, border: '1.5px solid rgba(139,92,246,0.2)', background: '#1a1035',
+    fontSize: 14, fontWeight: 500, color: '#94a3b8', cursor: 'pointer', userSelect: 'none',
   },
-  radioBtnActive: { border: '1.5px solid #7c3aed', background: '#faf5ff', color: '#6d28d9', fontWeight: 600 },
-  radioCircle: { width: 14, height: 14, borderRadius: '50%', border: '2px solid #d1d5db', flexShrink: 0 },
-  radioCircleActive: { border: '4px solid #7c3aed', background: '#fff' },
+  radioBtnActive: { border: '1.5px solid #8b5cf6', background: '#2d1b69', color: '#c4b5fd', fontWeight: 600 },
+  radioCircle: { width: 14, height: 14, borderRadius: '50%', border: '2px solid #4a3a6e', flexShrink: 0 },
+  radioCircleActive: { border: '4px solid #8b5cf6', background: '#160d2e' },
 
   // Chips
   chipGrid: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   chip: {
-    padding: '7px 13px', borderRadius: 20, border: '1.5px solid #e5e7eb', background: '#fff',
-    fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer', userSelect: 'none',
+    padding: '7px 13px', borderRadius: 20, border: '1.5px solid rgba(139,92,246,0.2)', background: '#1a1035',
+    fontSize: 13, fontWeight: 500, color: '#64748b', cursor: 'pointer', userSelect: 'none',
   },
-  chipRoleActive: { border: '1.5px solid #7c3aed', background: '#ede9fe', color: '#6d28d9' },
-  chipToolActive: { border: '1.5px solid #0891b2', background: '#ecfeff', color: '#0e7490' },
-  error: { margin: 0, fontSize: 13, color: '#ef4444', background: '#fef2f2', padding: '10px 14px', borderRadius: 8 },
+  chipRoleActive: { border: '1.5px solid #8b5cf6', background: '#2d1b69', color: '#c4b5fd' },
+  chipToolActive: { border: '1.5px solid rgba(56,189,248,0.4)', background: '#0c2a3a', color: '#38bdf8' },
+  error: { margin: 0, fontSize: 13, color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '10px 14px', borderRadius: 8 },
   btnRow: { display: 'flex', gap: 10, marginTop: 4 },
   previewBtn: {
-    flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid #7c3aed',
-    background: '#fff', color: '#7c3aed', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+    flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid rgba(139,92,246,0.4)',
+    background: 'transparent', color: '#a78bfa', fontSize: 15, fontWeight: 700, cursor: 'pointer',
   },
   saveBtn: {
-    flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: '#7c3aed',
+    flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: '#8b5cf6',
     color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(124,58,237,0.3)',
+    boxShadow: '0 4px 12px rgba(139,92,246,0.4)',
   },
 };
