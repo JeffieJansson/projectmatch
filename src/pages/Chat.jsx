@@ -25,6 +25,7 @@ export default function Chat() {
   const [messages,  setMessages]  = useState([]);
   const [text,      setText]      = useState('');
   const [loading,   setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [sending,   setSending]   = useState(false);
   const [sendError, setSendError] = useState('');
 
@@ -33,37 +34,44 @@ export default function Chat() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUserId(user.id);
 
-      const { data: match } = await supabase
-        .from('matches')
-        .select('owner_id, requester_id, projects(title)')
-        .eq('id', matchId)
-        .single();
+        const { data: match, error: matchError } = await supabase
+          .from('matches')
+          .select('owner_id, requester_id, projects(title)')
+          .eq('id', matchId)
+          .single();
 
-      if (!match) { navigate('/matches'); return; }
+        if (matchError) throw matchError;
+        if (!match) { navigate('/matches'); return; }
 
-      const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
+        const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, tagline, avatar_url')
-        .eq('id', otherId)
-        .single();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name, tagline, avatar_url')
+          .eq('id', otherId)
+          .single();
 
-      setOther({ ...profile, projectTitle: match.projects?.title });
+        setOther({ ...profile, projectTitle: match.projects?.title });
 
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('match_id', matchId)
-        .order('created_at', { ascending: true });
+        const { data: msgs, error: msgsError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('match_id', matchId)
+          .order('created_at', { ascending: true });
 
-      setMessages(msgs || []);
-      setLoading(false);
+        if (msgsError) throw msgsError;
 
-      localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
+        setMessages(msgs || []);
+        localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
+      } catch (err) {
+        setLoadError('Could not load chat. Check your connection and try again.');
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [matchId, navigate]);
@@ -124,6 +132,10 @@ export default function Chat() {
 
   if (loading) {
     return <div style={s.center}><span style={s.muted}>Loading chat...</span></div>;
+  }
+
+  if (loadError) {
+    return <div style={s.center}><span style={{ color: '#f87171', fontSize: 14, textAlign: 'center' }}>{loadError}</span></div>;
   }
 
   const name = other?.full_name || 'Unknown';

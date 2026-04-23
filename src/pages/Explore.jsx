@@ -9,6 +9,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [error, setError] = useState(null);
 
   // Drag-state
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -17,47 +18,51 @@ export default function Explore() {
 
   useEffect(() => {
     async function fetchProjects() {
-      const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-      // Fetch user's roles for relevance sorting
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('roles')
-        .eq('id', user.id)
-        .single();
-      const userRoles = new Set(
-        (Array.isArray(profile?.roles) ? profile.roles : []).map((r) => r.toLowerCase())
-      );
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('roles')
+          .eq('id', user.id)
+          .single();
+        const userRoles = new Set(
+          (Array.isArray(profile?.roles) ? profile.roles : []).map((r) => r.toLowerCase())
+        );
 
-      // Fetch projects the user hasn't swiped on yet
-      const { data: seen } = await supabase
-        .from('interests')
-        .select('project_id')
-        .eq('user_id', user.id);
+        const { data: seen } = await supabase
+          .from('interests')
+          .select('project_id')
+          .eq('user_id', user.id);
 
-      const seenIds = (seen || []).map((r) => r.project_id);
+        const seenIds = (seen || []).map((r) => r.project_id);
 
-      let query = supabase.from('projects').select('*').neq('creator_id', user.id).limit(50);
-      if (seenIds.length > 0) {
-        query = query.not('id', 'in', `(${seenIds.join(',')})`);
+        let query = supabase.from('projects').select('*').neq('creator_id', user.id).limit(50);
+        if (seenIds.length > 0) {
+          query = query.not('id', 'in', `(${seenIds.join(',')})`);
+        }
+
+        const { data, error: fetchError } = await query;
+        if (fetchError) throw fetchError;
+
+        const projects = data || [];
+
+        if (userRoles.size > 0) {
+          projects.sort((a, b) => {
+            const rolesA = Array.isArray(a.roles_needed) ? a.roles_needed : (a.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
+            const rolesB = Array.isArray(b.roles_needed) ? b.roles_needed : (b.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
+            const matchA = rolesA.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
+            const matchB = rolesB.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
+            return matchA - matchB;
+          });
+        }
+
+        setProjects(projects);
+      } catch (err) {
+        setError('Could not load projects. Check your connection and try again.');
+      } finally {
+        setLoading(false);
       }
-
-      const { data } = await query;
-      const projects = data || [];
-
-      // Sort: projects with at least one matching role first
-      if (userRoles.size > 0) {
-        projects.sort((a, b) => {
-          const rolesA = Array.isArray(a.roles_needed) ? a.roles_needed : (a.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
-          const rolesB = Array.isArray(b.roles_needed) ? b.roles_needed : (b.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
-          const matchA = rolesA.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
-          const matchB = rolesB.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
-          return matchA - matchB;
-        });
-      }
-
-      setProjects(projects);
-      setLoading(false);
     }
 
     fetchProjects();
@@ -137,6 +142,14 @@ export default function Explore() {
     return (
       <div style={styles.center}>
         <span style={styles.loadingText}>Loading projects...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.center}>
+        <p style={styles.errorText}>{error}</p>
       </div>
     );
   }
@@ -384,6 +397,13 @@ const styles = {
   loadingText: {
     color: '#64748b',
     fontSize: 15,
+  },
+  errorText: {
+    color: '#f87171',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 1.6,
+    margin: 0,
   },
   emptyIcon: { fontSize: 48 },
   emptyTitle: { margin: 0, fontSize: 20, fontWeight: 700, color: '#f1f5f9' },

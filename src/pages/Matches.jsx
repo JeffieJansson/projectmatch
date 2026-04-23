@@ -7,43 +7,51 @@ export default function Matches() {
   const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-      const { data } = await supabase
-        .from('matches')
-        .select('id, owner_id, requester_id, created_at, projects(title)')
-        .or(`owner_id.eq.${user.id},requester_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        const { data, error: fetchError } = await supabase
+          .from('matches')
+          .select('id, owner_id, requester_id, created_at, projects(title)')
+          .or(`owner_id.eq.${user.id},requester_id.eq.${user.id}`)
+          .order('created_at', { ascending: false });
 
-      if (!data || data.length === 0) {
-        setMatches([]);
+        if (fetchError) throw fetchError;
+
+        if (!data || data.length === 0) { setMatches([]); return; }
+
+        const enriched = await Promise.all(
+          data.map(async (match) => {
+            const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, full_name, tagline, roles, avatar_url')
+              .eq('id', otherId)
+              .single();
+            return { ...match, other: profile || { id: otherId, full_name: 'Unknown' } };
+          })
+        );
+
+        setMatches(enriched);
+      } catch (err) {
+        setError('Could not load matches. Check your connection and try again.');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const enriched = await Promise.all(
-        data.map(async (match) => {
-          const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, full_name, tagline, roles, avatar_url')
-            .eq('id', otherId)
-            .single();
-          return { ...match, other: profile || { id: otherId, full_name: 'Unknown' } };
-        })
-      );
-
-      setMatches(enriched);
-      setLoading(false);
     }
     load();
   }, []);
 
   if (loading) {
     return <div style={s.center}><span style={s.muted}>Loading matches...</span></div>;
+  }
+
+  if (error) {
+    return <div style={s.center}><span style={{ color: '#f87171', fontSize: 14, textAlign: 'center' }}>{error}</span></div>;
   }
 
   if (matches.length === 0) {

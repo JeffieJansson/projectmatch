@@ -23,16 +23,19 @@ export default function MyProjects() {
   const [userId, setUserId]     = useState(null);
   const [loading, setLoading]   = useState(true);
   const [reqCount, setReqCount] = useState(0);
+  const [error, setError]       = useState(null);
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user.id);
-      await Promise.all([
-        loadProjects(user.id),
-        loadRequests(user.id),
-      ]);
-      setLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUserId(user.id);
+        await Promise.all([loadProjects(user.id), loadRequests(user.id)]);
+      } catch (err) {
+        setError('Could not load projects. Check your connection and try again.');
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -98,11 +101,11 @@ export default function MyProjects() {
   }
 
   if (loading) {
-    return (
-      <div style={s.center}>
-        <span style={s.muted}>Loading...</span>
-      </div>
-    );
+    return <div style={s.center}><span style={s.muted}>Loading...</span></div>;
+  }
+
+  if (error) {
+    return <div style={s.center}><span style={{ color: '#f87171', fontSize: 14, textAlign: 'center' }}>{error}</span></div>;
   }
 
   return (

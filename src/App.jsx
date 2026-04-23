@@ -15,6 +15,7 @@ import EditProject from './pages/EditProject';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import BottomNav from './components/BottomNav';
+import OfflineBanner from './components/OfflineBanner';
 
 export default function App() {
   const [session, setSession] = useState(undefined);           // undefined = loading
@@ -55,6 +56,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+        <OfflineBanner />
         <Routes>
           {/* Public */}
           <Route
