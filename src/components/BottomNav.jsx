@@ -74,7 +74,7 @@ export default function BottomNav() {
             to={tab.to}
             style={({ isActive }) => ({
               ...styles.tab,
-              color: isActive ? '#7c3aed' : '#9ca3af',
+              color: isActive ? '#a78bfa' : '#4a3a6e',
             })}
           >
             {({ isActive }) => (
@@ -103,8 +103,8 @@ export default function BottomNav() {
 const styles = {
   nav: {
     display: 'flex',
-    borderTop: '1px solid #e5e7eb',
-    background: '#fff',
+    borderTop: '1px solid rgba(139,92,246,0.15)',
+    background: '#160d2e',
     paddingBottom: 'env(safe-area-inset-bottom)',
   },
   tab: {
@@ -129,7 +129,7 @@ const styles = {
     width: 4,
     height: 4,
     borderRadius: '50%',
-    background: '#7c3aed',
+    background: '#8b5cf6',
   },
   badge: {
     position: 'absolute',
@@ -138,7 +138,7 @@ const styles = {
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    background: '#7c3aed',
+    background: '#8b5cf6',
     color: '#fff',
     fontSize: 10,
     fontWeight: 700,
