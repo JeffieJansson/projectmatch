@@ -61,6 +61,13 @@ export default function Register() {
           </button>
         </form>
 
+        <p style={styles.legal}>
+          By registering you agree to our{' '}
+          <Link to="/terms" style={styles.link}>Terms of Service</Link>
+          {' '}and{' '}
+          <Link to="/privacy" style={styles.link}>Privacy Policy</Link>.
+        </p>
+
         <p style={styles.footer}>
           Already have an account?{' '}
           <Link to="/login" style={styles.link}>Log in</Link>
@@ -142,8 +149,15 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
   },
+  legal: {
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 1.6,
+  },
   footer: {
-    marginTop: 24,
+    marginTop: 12,
     textAlign: 'center',
     fontSize: 14,
     color: '#64748b',

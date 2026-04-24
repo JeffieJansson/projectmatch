@@ -14,6 +14,8 @@ import Onboarding from './pages/Onboarding';
 import EditProject from './pages/EditProject';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import BottomNav from './components/BottomNav';
 import OfflineBanner from './components/OfflineBanner';
 
@@ -36,15 +38,16 @@ export default function App() {
   }, []);
 
   // ── Fetch onboarding status whenever the logged-in user changes ───────────
+  const userId = session?.user?.id;
   useEffect(() => {
-    if (!session) return;
+    if (!userId) return;
     supabase
       .from('profiles')
       .select('onboarding_completed')
-      .eq('id', session.user.id)
+      .eq('id', userId)
       .single()
       .then(({ data }) => setOnboardingDone(!!data?.onboarding_completed));
-  }, [session?.user?.id]);
+  }, [userId]);
 
   // Skip loading guard for reset-password so the recovery token in the URL hash
   // can be processed by the page itself without being redirected or unmounted.
@@ -71,6 +74,8 @@ export default function App() {
           {/* Public auth helpers */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
 
           {/* Onboarding – protected, no BottomNav */}
           <Route
