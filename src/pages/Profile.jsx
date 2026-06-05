@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import Avatar, { parseConfig } from '../components/Avatar';
+import Avatar from '../components/Avatar';
+import { parseConfig } from '../lib/avatarUtils';
 
 // 'view' | 'edit' | 'preview'
 const MODES = { VIEW: 'view', EDIT: 'edit', PREVIEW: 'preview' };
