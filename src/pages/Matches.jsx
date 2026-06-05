@@ -37,7 +37,7 @@ export default function Matches() {
         );
 
         setMatches(enriched);
-      } catch (err) {
+      } catch {
         setError('Could not load matches. Check your connection and try again.');
       } finally {
         setLoading(false);
