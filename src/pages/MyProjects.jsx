@@ -31,7 +31,7 @@ export default function MyProjects() {
         const { data: { user } } = await supabase.auth.getUser();
         setUserId(user.id);
         await Promise.all([loadProjects(user.id), loadRequests(user.id)]);
-      } catch (err) {
+      } catch {
         setError('Could not load projects. Check your connection and try again.');
       } finally {
         setLoading(false);
