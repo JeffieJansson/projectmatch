@@ -36,6 +36,7 @@ export default function Chat() {
     async function load() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { navigate('/login'); return; }
         setUserId(user.id);
 
         const { data: match, error: matchError } = await supabase
@@ -67,7 +68,7 @@ export default function Chat() {
 
         setMessages(msgs || []);
         localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
-      } catch (err) {
+      } catch {
         setLoadError('Could not load chat. Check your connection and try again.');
       } finally {
         setLoading(false);
