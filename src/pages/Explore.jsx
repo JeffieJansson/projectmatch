@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 const SWIPE_THRESHOLD = 80; // px before swipe counts as a decision
 
@@ -8,7 +9,6 @@ export default function Explore() {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
 
   // Drag-state
@@ -37,7 +37,11 @@ export default function Explore() {
 
         const seenIds = (seen || []).map((r) => r.project_id);
 
-        let query = supabase.from('projects').select('*').neq('creator_id', user.id).limit(50);
+        let query = supabase
+          .from('projects')
+          .select('*, profiles!creator_id(full_name, avatar_url, tagline)')
+          .neq('creator_id', user.id)
+          .limit(50);
         if (seenIds.length > 0) {
           query = query.not('id', 'in', `(${seenIds.join(',')})`);
         }
@@ -45,10 +49,10 @@ export default function Explore() {
         const { data, error: fetchError } = await query;
         if (fetchError) throw fetchError;
 
-        const projects = data || [];
+        const fetched = data || [];
 
         if (userRoles.size > 0) {
-          projects.sort((a, b) => {
+          fetched.sort((a, b) => {
             const rolesA = Array.isArray(a.roles_needed) ? a.roles_needed : (a.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
             const rolesB = Array.isArray(b.roles_needed) ? b.roles_needed : (b.roles_needed || '').split(',').map((r) => r.trim()).filter(Boolean);
             const matchA = rolesA.some((r) => userRoles.has(r.toLowerCase())) ? 0 : 1;
@@ -57,8 +61,8 @@ export default function Explore() {
           });
         }
 
-        setProjects(projects);
-      } catch (err) {
+        setProjects(fetched);
+      } catch {
         setError('Could not load projects. Check your connection and try again.');
       } finally {
         setLoading(false);
@@ -70,7 +74,7 @@ export default function Explore() {
 
   const current = projects[index];
 
-  // ── Pointer events (fungerar för både mus och touch) ──────────────────────
+  // ── Pointer events (works with mouse and touch) ──────────────────────
   function onPointerDown(e) {
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStart.current = { x: e.clientX, y: e.clientY };
@@ -102,8 +106,6 @@ export default function Explore() {
   }
 
   async function commitSwipe(direction) {
-    setFeedback(direction);
-
     if (direction === 'like' && current) {
       setSaving(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -120,7 +122,6 @@ export default function Explore() {
     setTimeout(() => {
       setIndex((i) => i + 1);
       setOffset({ x: 0, y: 0 });
-      setFeedback(null);
     }, 300);
   }
 
@@ -171,7 +172,7 @@ export default function Explore() {
         <span style={styles.counter}>{index + 1} / {projects.length}</span>
       </div>
 
-      {/* Kort-stack: nästa kort skymtar bakom */}
+      {/* card-stack*/}
       <div style={styles.stack}>
         {projects[index + 1] && (
           <div style={styles.nextCard}>
@@ -179,7 +180,7 @@ export default function Explore() {
           </div>
         )}
 
-        {/* Aktivt kort */}
+        {/* Active card */}
         <div
           style={{ ...styles.activeCard, ...cardStyle }}
           onPointerDown={onPointerDown}
@@ -223,7 +224,7 @@ export default function Explore() {
   );
 }
 
-// ── Projektkortet ─────────────────────────────────────────────────────────
+// ── Project Card ─────────────────────────────────────────────────────────
 function ProjectCard({ project }) {
   const roles = Array.isArray(project.roles_needed)
     ? project.roles_needed
@@ -231,9 +232,11 @@ function ProjectCard({ project }) {
     ? project.roles_needed.split(',').map((r) => r.trim()).filter(Boolean)
     : [];
 
+  const owner = project.profiles;
+
   return (
     <div style={card.root}>
-      {/* Färgad toppbanner */}
+      {/* Colored top banner */}
       <div style={{ ...card.banner, background: stageColor(project.stage) }}>
         <span style={card.stage}>{stageLabel(project.stage)}</span>
       </div>
@@ -257,6 +260,17 @@ function ProjectCard({ project }) {
           </div>
         )}
       </div>
+
+      {/* Owner row */}
+      {owner && (
+        <div style={card.ownerRow}>
+          <Avatar avatarUrl={owner.avatar_url} name={owner.full_name} size={30} />
+          <div style={card.ownerInfo}>
+            <span style={card.ownerName}>{owner.full_name || 'Unknown'}</span>
+            {owner.tagline && <span style={card.ownerTagline}>{owner.tagline}</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -269,7 +283,7 @@ function MetaChip({ icon, label }) {
   );
 }
 
-// ── Hjälpfunktioner ───────────────────────────────────────────────────────
+// ── Helper functions ───────────────────────────────────────────────────────
 function stageLabel(stage) {
   const map = {
     idea: 'Idea',
@@ -503,5 +517,34 @@ const card = {
     padding: '4px 12px',
     borderRadius: 20,
     fontWeight: 500,
+  },
+  ownerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '10px 20px 14px',
+    borderTop: '1px solid rgba(139,92,246,0.12)',
+    flexShrink: 0,
+  },
+  ownerInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 1,
+    minWidth: 0,
+  },
+  ownerName: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#c4b5fd',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  ownerTagline: {
+    fontSize: 11,
+    color: '#64748b',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
 };
