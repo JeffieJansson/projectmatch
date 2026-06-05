@@ -728,6 +728,7 @@ const v = {
     bottom: 16,
     left: 20,
     right: 20,
+    textAlign: 'center',
   },
   name: { margin: 0, fontSize: 24, fontWeight: 800, color: '#f1f5f9', lineHeight: 1.1 },
   taglineOnAvatar: { margin: '4px 0 0', fontSize: 14, color: '#94a3b8', fontWeight: 400 },
