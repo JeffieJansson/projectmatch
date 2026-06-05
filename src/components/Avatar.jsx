@@ -1,27 +1,4 @@
-/**
- * Delad Avatar-komponent.
- *
- * avatarUrl-format:
- *   - null / ''           → initialer på lila gradient (default)
- *   - HTTP(S)-URL         → foto
- *   - JSON { bg, fg, font?, emoji? } → anpassad avatar
- *   - legacy ensam emoji  → emoji med lila bakgrund
- */
-
-export function parseConfig(avatarUrl) {
-  if (!avatarUrl) return null;
-  const trimmed = avatarUrl.trim();
-  if (!trimmed.startsWith('{')) return null;
-  try {
-    const obj = JSON.parse(trimmed);
-    // Normalisera: behandla tom emoji-sträng som "ingen emoji"
-    if (obj.emoji === '') obj.emoji = null;
-    return obj;
-  } catch (err) {
-    console.warn('[Avatar] JSON-parsning misslyckades:', trimmed, err);
-    return null;
-  }
-}
+import { parseConfig } from '../lib/avatarUtils';
 
 export default function Avatar({ avatarUrl, name, size = 48, style = {} }) {
   // Alltid en säker strängfallback för name
@@ -33,8 +10,6 @@ export default function Avatar({ avatarUrl, name, size = 48, style = {} }) {
     .map((w) => w[0].toUpperCase())
     .slice(0, 2)
     .join('') || '?';
-
-  console.log('[Avatar] avatarUrl:', avatarUrl, '| initials:', initials);
 
   const base = {
     width:          size,
