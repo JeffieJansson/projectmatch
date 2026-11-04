@@ -1,29 +1,41 @@
-import { useEffect, useState } from 'react';
+// ─── Imports ───────────────────────────────────────────────
+import { useEffect, useRef, useState } from 'react';
 
+// ─── Component ─────────────────────────────────────────────
 export default function OfflineBanner() {
+  // ─── State ───────────────────────────────────────────────
   const [offline, setOffline] = useState(!navigator.onLine);
   const [visible, setVisible] = useState(!navigator.onLine);
 
+  // Holds the timer that hides the banner after reconnecting
+  const hideTimer = useRef(null);
+
+  // ─── Connection listeners ────────────────────────────────
   useEffect(() => {
     function handleOffline() {
+      // Cancel a pending hide so the new offline banner is not hidden early
+      clearTimeout(hideTimer.current);
       setOffline(true);
       setVisible(true);
     }
 
     function handleOnline() {
       setOffline(false);
-      // Keep banner visible briefly to show "back online" state, then hide
-      setTimeout(() => setVisible(false), 2000);
+      // Show the "back online" state briefly, then hide the banner
+      hideTimer.current = setTimeout(() => setVisible(false), 2000);
     }
 
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
+
     return () => {
+      clearTimeout(hideTimer.current);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('online', handleOnline);
     };
   }, []);
 
+  // ─── Render ──────────────────────────────────────────────
   if (!visible) return null;
 
   return (
@@ -33,6 +45,7 @@ export default function OfflineBanner() {
   );
 }
 
+// ─── Styles ────────────────────────────────────────────────
 const s = {
   banner: {
     position: 'fixed',
