@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import ConfirmDialog from '../components/ConfirmDialog';
 
+// Returns the first Supabase error (or null) so the caller can show it
 async function deleteProject(id) {
-  await supabase.from('interests').delete().eq('project_id', id);
-  await supabase.from('projects').delete().eq('id', id);
+  const { error: interestsError } = await supabase.from('interests').delete().eq('project_id', id);
+  const { data: deletedProjects, error: projectError } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+    .select('id');
+  if (!projectError && (!deletedProjects || deletedProjects.length === 0)) {
+    // No error but nothing deleted – typically blocked by an RLS policy
+    return new Error('Could not delete the project. You may not have permission.');
+  }
+  return projectError || interestsError || null;
 }
 
 const STAGE_LABEL = { idea: 'Idea', mvp: 'MVP', beta: 'Beta', growth: 'Growth', scaling: 'Scaling' };
@@ -194,6 +205,8 @@ export default function MyProjects() {
 function ProjectsList({ projects, onDeleted }) {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null); // project awaiting confirmation
+  const [deleteError, setDeleteError] = useState(null);
 
   if (projects.length === 0) {
     return (
@@ -205,16 +218,50 @@ function ProjectsList({ projects, onDeleted }) {
     );
   }
 
-  async function handleDelete(p) {
-    if (!window.confirm(`Ta bort "${p.title}"? Detta går inte att ångra.`)) return;
+  function handleDelete(p) {
+    setDeleteError(null);
+    setPendingDelete(p);
+  }
+
+  function closeDeleteDialog() {
+    setPendingDelete(null);
+    setDeleteError(null);
+  }
+
+  async function confirmDelete() {
+    const p = pendingDelete;
+    if (!p) return;
+    setDeleteError(null);
     setDeletingId(p.id);
-    await deleteProject(p.id);
+    const error = await deleteProject(p.id);
     setDeletingId(null);
+
+    if (error) {
+      console.error(`Failed to delete project ${p.id}:`, error);
+      setDeleteError(error.message || 'Could not delete the project.');
+      return; // keep the dialog open so the user sees what went wrong
+    }
+
+    closeDeleteDialog();
     onDeleted(p.id);
   }
 
   return (
     <div style={s.list}>
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete project?"
+        message={`This will permanently delete “${pendingDelete?.title ?? ''}” together with its requests and matches. This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        loadingLabel="Deleting..."
+        danger
+        loading={!!pendingDelete && deletingId === pendingDelete.id}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteDialog}
+      />
+
       {projects.map((p) => {
         const sc = STAGE_COLOR[p.stage] || { bg: '#f3f4f6', color: '#6b7280' };
         const roles = Array.isArray(p.roles_needed)
@@ -255,14 +302,14 @@ function ProjectsList({ projects, onDeleted }) {
                 onClick={() => navigate(`/edit-project/${p.id}`)}
                 disabled={isDeleting}
               >
-                Redigera
+                Edit
               </button>
               <button
                 style={{ ...s.deleteBtn, opacity: isDeleting ? 0.5 : 1 }}
                 onClick={() => handleDelete(p)}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Tar bort...' : 'Ta bort'}
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

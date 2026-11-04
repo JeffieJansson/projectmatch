@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const ROLES = [
-  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Grafisk design',
-  'Marknadsföring', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
+  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Graphic design',
+  'Marketing', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
 ];
 
 const TOOLS = [
@@ -82,28 +82,28 @@ export default function Onboarding({ onComplete }) {
       <div style={s.page}>
         <div style={s.welcomeWrap}>
           <div style={s.logo}>🚀</div>
-          <h1 style={s.welcomeTitle}>Välkommen till ProjectMatch!</h1>
+          <h1 style={s.welcomeTitle}>Welcome to ProjectMatch!</h1>
           <p style={s.welcomeText}>
-            Här matchar du med spännande sidoprojekt och hittar medgrundare,
-            designers, utvecklare och marknadsförare som delar dina ambitioner.
+            Match with exciting side projects and find co-founders, designers,
+            developers and marketers who share your ambitions.
           </p>
           <p style={s.welcomeText}>
-            Swipa igenom projekt, visa intresse och starta en konversation
-            med projektägaren om det känns rätt.
+            Swipe through projects, show your interest and start a conversation
+            with the project owner when it feels right.
           </p>
           <div style={s.featureList}>
-            <FeatureRow icon="🔍" text="Utforska projekt som söker din kompetens" />
-            <FeatureRow icon="♥" text="Matcha med grundare du vill jobba med" />
-            <FeatureRow icon="💬" text="Chatta direkt i appen" />
+            <FeatureRow icon="🔍" text="Explore projects looking for your skills" />
+            <FeatureRow icon="♥" text="Match with founders you want to work with" />
+            <FeatureRow icon="💬" text="Chat directly in the app" />
           </div>
         </div>
 
         <div style={s.welcomeFooter}>
           <button style={s.primaryBtn} onClick={() => setStep(1)}>
-            Kom igång →
+            Get started →
           </button>
           <button style={s.skipLink} onClick={handleSkip} disabled={saving}>
-            Hoppa över
+            Skip for now
           </button>
         </div>
       </div>
@@ -114,35 +114,39 @@ export default function Onboarding({ onComplete }) {
   return (
     <div style={s.page}>
       <div style={s.formHeader}>
-        <h1 style={s.formTitle}>Din profil</h1>
-        <p style={s.formSub}>Hjälper projektägare att förstå vem du är.</p>
+        <h1 style={s.formTitle}>Your profile</h1>
+        <p style={s.formSub}>Helps project owners understand who you are.</p>
       </div>
 
       <div style={s.formScroll}>
         {/* Name */}
-        <Field label="Namn">
+        <Field label="Name">
           <input
             style={s.input}
-            placeholder="Ditt namn"
+            placeholder="Your name"
             value={form.fullName}
             onChange={(e) => set('fullName', e.target.value)}
           />
         </Field>
 
         {/* Gender */}
-        <Field label="Kön">
+        <Field label="Gender">
           <div style={s.radioGroup}>
-            {['Man', 'Kvinna', 'Vill ej ange'].map((g) => (
-              <label key={g} style={s.radioLabel}>
+            {[
+              { value: 'man',      label: 'Male' },
+              { value: 'kvinna',   label: 'Female' },
+              { value: 'ej_uppge', label: 'Prefer not to say' },
+            ].map(({ value, label }) => (
+              <label key={value} style={s.radioLabel}>
                 <input
                   type="radio"
                   name="gender"
-                  value={g}
-                  checked={form.gender === g}
-                  onChange={() => set('gender', g)}
+                  value={value}
+                  checked={form.gender === value}
+                  onChange={() => set('gender', value)}
                   style={s.radioInput}
                 />
-                {g}
+                {label}
               </label>
             ))}
           </div>
@@ -152,7 +156,7 @@ export default function Onboarding({ onComplete }) {
         <Field label="Tagline">
           <input
             style={s.input}
-            placeholder="T.ex. Full-stack dev som älskar produktutveckling"
+            placeholder="e.g. Full-stack dev who loves product development"
             value={form.tagline}
             onChange={(e) => set('tagline', e.target.value)}
           />
@@ -162,7 +166,7 @@ export default function Onboarding({ onComplete }) {
         <Field label="Bio">
           <textarea
             style={{ ...s.input, ...s.textarea }}
-            placeholder="Berätta lite om dig själv, dina erfarenheter och vad du letar efter..."
+            placeholder="Tell us a bit about yourself, your experience and what you're looking for..."
             value={form.bio}
             onChange={(e) => set('bio', e.target.value)}
             rows={4}
@@ -170,7 +174,7 @@ export default function Onboarding({ onComplete }) {
         </Field>
 
         {/* Roles */}
-        <Field label="Dina roller">
+        <Field label="Your roles">
           <div style={s.chipGrid}>
             {ROLES.map((role) => (
               <button
@@ -189,7 +193,7 @@ export default function Onboarding({ onComplete }) {
         </Field>
 
         {/* Tools */}
-        <Field label="Verktyg & ramverk">
+        <Field label="Tools & frameworks">
           <div style={s.chipGrid}>
             {TOOLS.map((tool) => (
               <button
@@ -236,10 +240,10 @@ export default function Onboarding({ onComplete }) {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Sparar...' : 'Spara och kom igång'}
+          {saving ? 'Saving...' : 'Save and get started'}
         </button>
         <button style={s.skipLink} onClick={handleSkip} disabled={saving}>
-          Hoppa över
+          Skip for now
         </button>
       </div>
     </div>

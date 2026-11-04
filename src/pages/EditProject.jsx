@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const ROLES = [
-  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Grafisk design',
-  'Marknadsföring', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
+  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Graphic design',
+  'Marketing', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
 ];
 
 const STAGES = [

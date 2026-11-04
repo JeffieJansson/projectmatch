@@ -19,3 +19,38 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────────
+   Colours reused from the app:
+   #0d0920 – app background (body)
+   #4a3a6e – muted purple (inactive BottomNav tabs, arrows)
+   #a78bfa – lighter purple accent (active tab, links)                        */
+
+html {
+  color-scheme: dark;
+}
+
+/* Standard properties: Firefox and Chrome/Edge 121+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a3a6e #0d0920;
+}
+
+/* Fallback: older Chrome/Edge and Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d0920;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a3a6e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
+}

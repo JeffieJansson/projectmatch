@@ -8,8 +8,8 @@ import { parseConfig } from '../lib/avatarUtils';
 const MODES = { VIEW: 'view', EDIT: 'edit', PREVIEW: 'preview' };
 
 const ROLES = [
-  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Grafisk design',
-  'Marknadsföring', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
+  'Frontend', 'Backend', 'Fullstack', 'UI/UX Design', 'Graphic design',
+  'Marketing', 'Growth', 'iOS/Android', 'Data/AI', 'Copywriting',
 ];
 
 const TOOLS = [
@@ -174,15 +174,16 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
   const isPreview = mode === MODES.PREVIEW;
 
   return (
-    <div style={v.page}>
+    <div style={v.page} className="pm-profile-view">
+      <ProfileLayoutStyles />
       {isPreview && (
-        <div style={v.previewBanner}>
+        <div style={v.previewBanner} className="pm-profile-preview-banner">
           <span style={v.previewLabel}>Preview</span>
           <button style={v.previewBack} onClick={onBackToEdit}>← Back to editing</button>
         </div>
       )}
 
-      <div style={v.card}>
+      <div style={v.card} className="pm-profile-card">
         {/* Avatar-banner */}
         <div style={v.avatarWrap}>
           <AvatarBanner avatarUrl={data.avatarUrl} name={data.fullName} />
@@ -375,7 +376,8 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
   const previewUrl = buildAvatarUrl(picker);
 
   return (
-    <div style={e.page}>
+    <div style={e.page} className="pm-profile-edit">
+      <ProfileLayoutStyles />
       <div style={e.topBar}>
         <button style={e.cancelBtn} onClick={onCancel}>← Back</button>
         <h1 style={e.heading}>Edit profile</h1>
@@ -398,8 +400,8 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
 
         {/* Picker-modal */}
         {pickerOpen && (
-          <div style={e.modalOverlay} onClick={() => setPickerOpen(false)}>
-            <div style={e.modal} onClick={(ev) => ev.stopPropagation()}>
+          <div style={e.modalOverlay} className="pm-profile-modal-overlay" onClick={() => setPickerOpen(false)}>
+            <div style={e.modal} className="pm-profile-modal" onClick={(ev) => ev.stopPropagation()}>
               <div style={e.modalHeader}>
                 <span style={e.modalTitle}>Choose profile picture</span>
                 <button style={e.modalClose} onClick={() => setPickerOpen(false)}>×</button>
@@ -507,7 +509,7 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    {uploading ? 'Uploading...' : '📷 Ladda upp foto istället'}
+                    {uploading ? 'Uploading...' : '📷 Upload a photo instead'}
                   </button>
                   {uploadErr && <p style={e.uploadErr}>{uploadErr}</p>}
                 </div>
@@ -636,6 +638,53 @@ function ProfileEdit({ draft, userId, onChange, saving, error, onPreview, onSave
       </div>
     </div>
   );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESPONSIVE LAYOUT (tablet/desktop only — mobile ≤480px keeps the inline styles)
+// !important is needed because the base styles are inline.
+// ═══════════════════════════════════════════════════════════════════════════
+const PROFILE_LAYOUT_CSS = `
+@media (min-width: 481px) {
+  /* View/preview: air above and below, card centred vertically when shorter
+     than the viewport. The page grows with its content, so tall cards scroll. */
+  .pm-profile-view {
+    justify-content: center;
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+  .pm-profile-card {
+    border-radius: 24px !important;
+  }
+  /* Preview: banner and card form one rounded block */
+  .pm-profile-preview-banner {
+    border-radius: 24px 24px 0 0;
+  }
+  .pm-profile-preview-banner + .pm-profile-card {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+
+  /* Edit: long form, no vertical centring – just more air at the top */
+  .pm-profile-edit {
+    padding-top: 32px !important;
+  }
+
+  /* Avatar picker: centred dialog instead of a bottom sheet */
+  .pm-profile-modal-overlay {
+    align-items: center !important;
+    padding: 32px 16px;
+  }
+  .pm-profile-modal {
+    border-radius: 20px !important;
+    border-bottom: 1px solid rgba(139,92,246,0.2) !important;
+    max-height: calc(100dvh - 64px) !important;
+  }
+}
+`;
+
+function ProfileLayoutStyles() {
+  return <style>{PROFILE_LAYOUT_CSS}</style>;
 }
 
 function Field({ label, children }) {
