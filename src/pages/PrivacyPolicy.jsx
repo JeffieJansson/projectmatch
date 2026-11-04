@@ -1,11 +1,18 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Go back to the previous page, or to Settings when opened directly (no in-app history)
+  function goBack() {
+    if (location.key !== 'default') navigate(-1);
+    else navigate('/settings');
+  }
 
   return (
     <div style={s.page}>
-      <button style={s.back} onClick={() => navigate(-1)}>← Back</button>
+      <button style={s.back} onClick={goBack}>← Back</button>
 
       <h1 style={s.title}>Privacy Policy</h1>
       <p style={s.meta}>Last updated: April 2026</p>
@@ -45,10 +52,10 @@ export default function PrivacyPolicy() {
         <ul>
           <li>Access the data we hold about you</li>
           <li>Correct inaccurate information via your profile page</li>
-          <li>Request deletion of your account and all associated data</li>
+          <li>Delete your account and all associated data yourself under Settings → Delete account, without contacting us</li>
         </ul>
         <p>
-          To delete your account or for any other questions about your data, contact us at{' '}
+          For any other questions about your data, contact us at{' '}
           <a href="mailto:hello@projectmatch.se" style={s.link}>hello@projectmatch.se</a>.
           We will process your request within 30 days.
         </p>

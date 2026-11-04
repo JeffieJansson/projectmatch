@@ -456,6 +456,7 @@ const s = {
   cardDesc: {
     margin: 0, fontSize: 14, color: '#94a3b8', lineHeight: 1.5,
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+    whiteSpace: 'pre-line', overflowWrap: 'anywhere',
   },
   cardMeta: { display: 'flex', gap: 8 },
   metaChip: { fontSize: 12, color: '#64748b', background: '#1a1035', padding: '4px 10px', borderRadius: 20 },

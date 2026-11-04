@@ -1,11 +1,18 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Terms() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Go back to the previous page, or to Settings when opened directly (no in-app history)
+  function goBack() {
+    if (location.key !== 'default') navigate(-1);
+    else navigate('/settings');
+  }
 
   return (
     <div style={s.page}>
-      <button style={s.back} onClick={() => navigate(-1)}>← Back</button>
+      <button style={s.back} onClick={goBack}>← Back</button>
 
       <h1 style={s.title}>Terms of Service</h1>
       <p style={s.meta}>Last updated: April 2026</p>

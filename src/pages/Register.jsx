@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { MIN_PASSWORD_LENGTH } from '../lib/auth';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function Register() {
     setError('');
 
     if (password !== confirm) { setError("Passwords don't match."); return; }
-    if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
+    if (password.length < MIN_PASSWORD_LENGTH)  { setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`); return; }
 
     setLoading(true);
 
@@ -49,7 +50,7 @@ export default function Register() {
           <input style={styles.input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required autoComplete="email" />
 
           <label style={styles.label}>Password</label>
-          <input style={styles.input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required autoComplete="new-password" />
+          <input style={styles.input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`} required autoComplete="new-password" />
 
           <label style={styles.label}>Confirm password</label>
           <input style={styles.input} type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required autoComplete="new-password" />

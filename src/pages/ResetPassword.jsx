@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { MIN_PASSWORD_LENGTH } from '../lib/auth';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function ResetPassword() {
     setError('');
 
     if (password !== confirm) { setError("Passwords don't match."); return; }
-    if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
+    if (password.length < MIN_PASSWORD_LENGTH)  { setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
@@ -73,7 +74,7 @@ export default function ResetPassword() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 6 characters"
+              placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
               required
               autoComplete="new-password"
             />

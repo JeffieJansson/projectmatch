@@ -5,6 +5,7 @@ import Explore from './pages/Explore';
 import MyProjects from './pages/MyProjects';
 import Matches from './pages/Matches';
 import Messages from './pages/Messages';
+import Settings from './pages/Settings';
 import Chat from './pages/Chat';
 import CreateProject from './pages/CreateProject';
 import Profile from './pages/Profile';
@@ -105,6 +106,7 @@ export default function App() {
                     <Route path="/create" element={<CreateProject />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:id" element={<PublicProfile />} />
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/chat/:matchId" element={<Chat />} />
                     <Route path="/edit-project/:id" element={<EditProject />} />
                   </Routes>

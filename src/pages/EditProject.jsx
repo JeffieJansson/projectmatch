@@ -84,8 +84,8 @@ export default function EditProject() {
         </Field>
 
         <Field label="Description *">
-          <textarea style={{ ...styles.input, ...styles.textarea }} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={600} rows={4} required />
-          <span style={styles.charCount}>{description.length} / 600</span>
+          <textarea style={{ ...styles.input, ...styles.textarea }} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={5000} rows={4} required />
+          <span style={styles.charCount}>{description.length} / 5000</span>
         </Field>
 
         <Field label="Stage *">

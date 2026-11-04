@@ -40,6 +40,22 @@ export function markChatRead(matchId) {
   notify();
 }
 
+/** Removes all locally stored notification state (used when the account is deleted). */
+export function clearNotificationStore() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key === SEEN_MATCHES_KEY || key?.startsWith('chat_last_read_')) keys.push(key);
+    }
+    keys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // storage unavailable – nothing to clear
+  }
+  // No notify() here: useNotifications would treat the missing key as a first
+  // run and write seen_match_ids again. The caller navigates away instead.
+}
+
 export function getChatLastRead(matchId) {
   try {
     return localStorage.getItem(`chat_last_read_${matchId}`) || '1970-01-01T00:00:00.000Z';

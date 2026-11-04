@@ -172,6 +172,7 @@ export default function Profile() {
 // ═══════════════════════════════════════════════════════════════════════════
 function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) {
   const isPreview = mode === MODES.PREVIEW;
+  const navigate = useNavigate();
 
   return (
     <div style={v.page} className="pm-profile-view">
@@ -188,6 +189,14 @@ function ProfileView({ data, mode, justSaved, onEdit, onBackToEdit, onLogout }) 
         <div style={v.avatarWrap}>
           <AvatarBanner avatarUrl={data.avatarUrl} name={data.fullName} />
           <div style={v.avatarGradient} />
+          {!isPreview && (
+            <button style={v.settingsBtn} onClick={() => navigate('/settings')} aria-label="Settings" title="Settings">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+          )}
           <div style={v.avatarName}>
             <h1 style={v.name}>{data.fullName || 'Your name'}</h1>
             {data.tagline && <p style={v.taglineOnAvatar}>{data.tagline}</p>}
@@ -752,6 +761,23 @@ const v = {
     width: '100%',
     boxSizing: 'border-box',
     border: '1px solid rgba(139,92,246,0.15)',
+  },
+  settingsBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 2,
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    border: '1px solid rgba(139,92,246,0.3)',
+    background: 'rgba(22,13,46,0.6)',
+    color: '#c4b5fd',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    padding: 0,
   },
   avatarWrap: {
     position: 'relative',

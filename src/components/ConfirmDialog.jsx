@@ -17,6 +17,8 @@ export default function ConfirmDialog({
   loading = false,
   loadingLabel = 'Deleting...',
   error = null,
+  confirmDisabled = false,
+  children = null,
   onConfirm,
   onCancel,
 }) {
@@ -99,6 +101,8 @@ export default function ConfirmDialog({
         <h2 id={titleId} style={s.title}>{title}</h2>
         <p id={messageId} style={s.message}>{message}</p>
 
+        {children}
+
         {error && (
           <p role="alert" style={s.error}>{error}</p>
         )}
@@ -118,10 +122,10 @@ export default function ConfirmDialog({
             style={{
               ...s.btn,
               ...(danger ? s.dangerBtn : s.confirmBtn),
-              ...(loading ? s.btnDisabled : {}),
+              ...(loading || confirmDisabled ? s.btnDisabled : {}),
             }}
             onClick={onConfirm}
-            disabled={loading}
+            disabled={loading || confirmDisabled}
           >
             {loading ? loadingLabel : confirmLabel}
           </button>

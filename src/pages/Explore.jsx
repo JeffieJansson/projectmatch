@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import Avatar from '../components/Avatar';
 
@@ -10,6 +11,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [readMoreProject, setReadMoreProject] = useState(null);
 
   // Drag-state
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -213,9 +215,13 @@ export default function Explore() {
             SKIP
           </div>
 
-          <ProjectCard project={current} />
+          <ProjectCard project={current} onReadMore={() => setReadMoreProject(current)} />
         </div>
       </div>
+
+      {readMoreProject && (
+        <DescriptionModal project={readMoreProject} onClose={() => setReadMoreProject(null)} />
+      )}
 
       {/* Knappar */}
       <div style={styles.buttons}>
@@ -241,7 +247,21 @@ export default function Explore() {
 }
 
 // ── Project Card ─────────────────────────────────────────────────────────
-function ProjectCard({ project }) {
+function ProjectCard({ project, onReadMore }) {
+  const descRef = useRef(null);
+  const [truncated, setTruncated] = useState(false);
+
+  // Show "Read more" only when the line clamp actually cuts the text
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    const check = () => setTruncated(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [project.description]);
+
   const roles = Array.isArray(project.roles_needed)
     ? project.roles_needed
     : typeof project.roles_needed === 'string'
@@ -259,7 +279,18 @@ function ProjectCard({ project }) {
 
       <div style={card.body}>
         <h2 style={card.title}>{project.title}</h2>
-        <p style={card.description}>{project.description}</p>
+        <p ref={descRef} style={card.description}>{project.description}</p>
+        {onReadMore && truncated && (
+          <button
+            type="button"
+            style={card.readMore}
+            // Don't let the card's pointer handlers start a swipe
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onReadMore}
+          >
+            Read more
+          </button>
+        )}
 
         <div style={card.meta}>
           <MetaChip icon="⏱" label={`${project.hours_per_week ?? '?'} h/week`} />
@@ -288,6 +319,45 @@ function ProjectCard({ project }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Full description modal ──────────────────────────────────────────────────
+function DescriptionModal({ project, onClose }) {
+  const titleId = useId();
+  const closeRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    closeRef.current?.focus();
+    function onKeyDown(e) {
+      if (e.key === 'Escape') onCloseRef.current();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, []);
+
+  return createPortal(
+    <div
+      style={modal.overlay}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={modal.dialog}>
+        <div style={modal.header}>
+          <h2 id={titleId} style={modal.title}>{project.title}</h2>
+          <button ref={closeRef} type="button" style={modal.close} onClick={onClose} aria-label="Close">×</button>
+        </div>
+        <div style={modal.body}>
+          <p style={modal.text}>{project.description}</p>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -490,6 +560,23 @@ const card = {
     color: '#94a3b8',
     lineHeight: 1.55,
     textAlign: 'center',
+    whiteSpace: 'pre-line',
+    overflowWrap: 'anywhere',
+    display: '-webkit-box',
+    WebkitLineClamp: 6,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  readMore: {
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    marginTop: -4,
+    color: '#a78bfa',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   meta: {
     display: 'flex',
@@ -562,5 +649,53 @@ const card = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+};
+
+// Same look as ConfirmDialog / Profile avatar modal
+const modal = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 2000,
+    background: 'rgba(8, 4, 20, 0.75)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    boxSizing: 'border-box',
+  },
+  dialog: {
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: 'calc(100dvh - 32px)',
+    background: '#160d2e',
+    border: '1px solid rgba(139,92,246,0.25)',
+    borderRadius: 20,
+    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: '16px 20px 12px',
+    borderBottom: '1px solid rgba(139,92,246,0.15)',
+    flexShrink: 0,
+  },
+  title: { margin: 0, fontSize: 18, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3, overflowWrap: 'anywhere' },
+  close: { background: 'none', border: 'none', fontSize: 22, color: '#64748b', cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 },
+  body: { overflowY: 'auto', padding: '16px 20px 20px' },
+  text: {
+    margin: 0,
+    fontSize: 14,
+    color: '#94a3b8',
+    lineHeight: 1.6,
+    whiteSpace: 'pre-line',
+    overflowWrap: 'anywhere',
   },
 };
