@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { getSeenMatchIds, markMatchesSeen } from '../lib/notificationStore';
 import Avatar from '../components/Avatar';
 
 export default function Matches() {
   const navigate = useNavigate();
-  const [matches, setMatches] = useState([]);
+  const [people, setPeople]   = useState([]);
+  const [seen, setSeen]       = useState(() => getSeenMatchIds() || new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
@@ -16,27 +18,36 @@ export default function Matches() {
 
         const { data, error: fetchError } = await supabase
           .from('matches')
-          .select('id, owner_id, requester_id, created_at, projects(title)')
+          .select('id, owner_id, requester_id, created_at')
           .or(`owner_id.eq.${user.id},requester_id.eq.${user.id}`)
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
+        if (!data || data.length === 0) { setPeople([]); return; }
 
-        if (!data || data.length === 0) { setMatches([]); return; }
+        // Group matches per matched user (one person can match on several projects)
+        const byUser = new Map();
+        for (const match of data) {
+          const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
+          if (!byUser.has(otherId)) byUser.set(otherId, []);
+          byUser.get(otherId).push(match.id);
+        }
 
-        const enriched = await Promise.all(
-          data.map(async (match) => {
-            const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, full_name, tagline, roles, avatar_url')
-              .eq('id', otherId)
-              .single();
-            return { ...match, other: profile || { id: otherId, full_name: 'Unknown' } };
-          })
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, tagline, roles, avatar_url')
+          .in('id', [...byUser.keys()]);
+
+        if (profilesError) throw profilesError;
+        const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+
+        setPeople(
+          [...byUser.entries()].map(([id, matchIds]) => ({
+            profile: profileMap[id] || { id, full_name: 'Unknown' },
+            matchIds,
+          }))
         );
-
-        setMatches(enriched);
+        setSeen(getSeenMatchIds() || new Set());
       } catch {
         setError('Could not load matches. Check your connection and try again.');
       } finally {
@@ -46,6 +57,11 @@ export default function Matches() {
     load();
   }, []);
 
+  function openProfile(person) {
+    markMatchesSeen(person.matchIds);
+    navigate(`/profile/${person.profile.id}`);
+  }
+
   if (loading) {
     return <div style={s.center}><span style={s.muted}>Loading matches...</span></div>;
   }
@@ -54,7 +70,7 @@ export default function Matches() {
     return <div style={s.center}><span style={{ color: '#f87171', fontSize: 14, textAlign: 'center' }}>{error}</span></div>;
   }
 
-  if (matches.length === 0) {
+  if (people.length === 0) {
     return (
       <div style={s.page}>
         <h1 style={s.heading}>Matches</h1>
@@ -71,21 +87,27 @@ export default function Matches() {
     <div style={s.page}>
       <h1 style={s.heading}>Matches</h1>
       <div style={s.list}>
-        {matches.map((match) => {
-          const name    = match.other.full_name || 'Unknown';
-          const tagline = match.other.tagline || null;
-          const project = match.projects?.title || null;
+        {people.map((person) => {
+          const { profile } = person;
+          const name    = profile.full_name || 'Unknown';
+          const tagline = profile.tagline || null;
+          const roles   = profile.roles || [];
+          const isNew   = person.matchIds.some((id) => !seen.has(id));
 
           return (
-            <button key={match.id} style={s.card} onClick={() => navigate(`/chat/${match.id}`)}>
-              <Avatar avatarUrl={match.other.avatar_url} name={name} size={50} />
+            <button key={profile.id} style={s.card} onClick={() => openProfile(person)}>
+              <Avatar avatarUrl={profile.avatar_url} name={name} size={50} />
               <div style={s.info}>
-                <span style={s.name}>{name}</span>
+                <span style={s.nameRow}>
+                  <span style={s.name}>{name}</span>
+                  {isNew && <span style={s.newChip}>New</span>}
+                </span>
                 {tagline && <span style={s.tagline}>{tagline}</span>}
-                {project && (
-                  <span style={s.projectLabel}>
-                    <span style={s.projectDot} />
-                    {project}
+                {roles.length > 0 && (
+                  <span style={s.roles}>
+                    {roles.map((role) => (
+                      <span key={role} style={s.roleChip}>{role}</span>
+                    ))}
                   </span>
                 )}
               </div>
@@ -117,11 +139,13 @@ const s = {
     textAlign: 'left',
     width: '100%',
   },
-  info: { flex: 1, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 },
+  info: { flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 },
+  nameRow: { display: 'flex', alignItems: 'center', gap: 8 },
   name: { fontSize: 16, fontWeight: 700, color: '#f1f5f9' },
+  newChip: { fontSize: 10, fontWeight: 700, background: '#8b5cf6', color: '#fff', padding: '2px 7px', borderRadius: 20 },
   tagline: { fontSize: 13, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  projectLabel: { display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#a78bfa', fontWeight: 600 },
-  projectDot: { width: 5, height: 5, borderRadius: '50%', background: '#8b5cf6', flexShrink: 0 },
+  roles: { display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 },
+  roleChip: { fontSize: 11, background: '#2d1b69', color: '#c4b5fd', padding: '2px 8px', borderRadius: 20, fontWeight: 500 },
   arrow: { fontSize: 22, color: '#4a3a6e', flexShrink: 0 },
   empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 24px', gap: 8 },
   emptyIcon: { fontSize: 48 },

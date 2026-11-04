@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import {
+  NOTIFICATIONS_CHANGED,
+  getSeenMatchIds,
+  markMatchesSeen,
+  getChatLastRead,
+} from '../lib/notificationStore';
 
 export function useNotifications() {
   const [requestCount, setRequestCount] = useState(0);
+  const [newMatchCount, setNewMatchCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -25,12 +32,45 @@ export function useNotifications() {
         return;
       }
 
-      const { count } = await supabase
-        .from('interests')
-        .select('id', { count: 'exact', head: true })
-        .in('project_id', projectIds);
+      const [{ data: interests }, { data: existingMatches }] = await Promise.all([
+        supabase
+          .from('interests')
+          .select('project_id, user_id')
+          .in('project_id', projectIds),
+        supabase
+          .from('matches')
+          .select('project_id, requester_id')
+          .in('project_id', projectIds),
+      ]);
 
-      if (!cancelled) setRequestCount(count || 0);
+      // Exclude interests that already resulted in a match (same project + same user)
+      const matched = new Set(
+        (existingMatches || []).map((m) => `${m.project_id}:${m.requester_id}`)
+      );
+      const pending = (interests || []).filter(
+        (i) => !matched.has(`${i.project_id}:${i.user_id}`)
+      );
+
+      if (!cancelled) setRequestCount(pending.length);
+    }
+
+    async function fetchMatchIds() {
+      const { data: matches } = await supabase
+        .from('matches')
+        .select('id')
+        .or(`owner_id.eq.${userId},requester_id.eq.${userId}`);
+      matchIds = (matches || []).map((m) => m.id);
+    }
+
+    // Count matches the user hasn't clicked into yet
+    function computeNewMatchCount() {
+      let seen = getSeenMatchIds();
+      if (seen === null) {
+        // First run on this device: treat existing matches as already seen
+        markMatchesSeen(matchIds);
+        seen = new Set(matchIds);
+      }
+      if (!cancelled) setNewMatchCount(matchIds.filter((id) => !seen.has(id)).length);
     }
 
     // Count unread messages across all the user's matches
@@ -39,20 +79,30 @@ export function useNotifications() {
         if (!cancelled) setUnreadCount(0);
         return;
       }
-      let total = 0;
-      for (const matchId of matchIds) {
-        const lastRead =
-          localStorage.getItem(`chat_last_read_${matchId}`) ||
-          '1970-01-01T00:00:00.000Z';
-        const { count } = await supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .eq('match_id', matchId)
-          .neq('sender_id', userId)
-          .gt('created_at', lastRead);
-        total += count || 0;
-      }
-      if (!cancelled) setUnreadCount(total);
+      const counts = await Promise.all(
+        matchIds.map(async (matchId) => {
+          const { count } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('match_id', matchId)
+            .neq('sender_id', userId)
+            .gt('created_at', getChatLastRead(matchId));
+          return count || 0;
+        })
+      );
+      if (!cancelled) setUnreadCount(counts.reduce((a, b) => a + b, 0));
+    }
+
+    async function onMatchesChanged() {
+      await fetchMatchIds();
+      computeNewMatchCount();
+      await Promise.all([fetchRequestCount(), fetchUnreadCount()]);
+    }
+
+    function onLocalChange() {
+      if (!userId) return;
+      computeNewMatchCount();
+      fetchUnreadCount();
     }
 
     async function init() {
@@ -60,14 +110,10 @@ export function useNotifications() {
       if (!user || cancelled) return;
 
       userId = user.id;
-
-      const { data: matches } = await supabase
-        .from('matches')
-        .select('id')
-        .or(`owner_id.eq.${userId},requester_id.eq.${userId}`);
-      matchIds = (matches || []).map((m) => m.id);
-
+      await fetchMatchIds();
+      computeNewMatchCount();
       await Promise.all([fetchRequestCount(), fetchUnreadCount()]);
+      if (cancelled) return;
 
       const interestsCh = supabase
         .channel('nav:interests')
@@ -79,16 +125,23 @@ export function useNotifications() {
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, fetchUnreadCount)
         .subscribe();
 
-      channels = [interestsCh, messagesCh];
+      const matchesCh = supabase
+        .channel('nav:matches')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, onMatchesChanged)
+        .subscribe();
+
+      channels = [interestsCh, messagesCh, matchesCh];
     }
 
+    window.addEventListener(NOTIFICATIONS_CHANGED, onLocalChange);
     init();
 
     return () => {
       cancelled = true;
+      window.removeEventListener(NOTIFICATIONS_CHANGED, onLocalChange);
       channels.forEach((ch) => supabase.removeChannel(ch));
     };
   }, []);
 
-  return { requestCount, unreadCount };
+  return { requestCount, newMatchCount, unreadCount };
 }

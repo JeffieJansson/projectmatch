@@ -24,6 +24,7 @@ export default function MyProjects() {
   const [loading, setLoading]   = useState(true);
   const [reqCount, setReqCount] = useState(0);
   const [error, setError]       = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function load() {
@@ -66,13 +67,27 @@ export default function MyProjects() {
     const projectMap = Object.fromEntries(myProjects.map((p) => [p.id, p.title]));
 
     // Fetch interests + join with profiles (safe fields only)
-    const { data: interests } = await supabase
-      .from('interests')
-      .select('id, user_id, project_id, created_at, profiles(full_name, tagline, roles)')
-      .in('project_id', projectIds)
-      .order('created_at', { ascending: false });
+    const [{ data: interests }, { data: existingMatches }] = await Promise.all([
+      supabase
+        .from('interests')
+        .select('id, user_id, project_id, created_at, profiles(full_name, tagline, roles)')
+        .in('project_id', projectIds)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('matches')
+        .select('project_id, requester_id')
+        .in('project_id', projectIds),
+    ]);
 
-    const enriched = (interests || []).map((r) => ({
+    // Exclude interests that already resulted in a match (same project + same user)
+    const matched = new Set(
+      (existingMatches || []).map((m) => `${m.project_id}:${m.requester_id}`)
+    );
+    const pending = (interests || []).filter(
+      (i) => !matched.has(`${i.project_id}:${i.user_id}`)
+    );
+
+    const enriched = pending.map((r) => ({
       ...r,
       projectTitle: projectMap[r.project_id] || 'Unknown project',
     }));
@@ -83,13 +98,32 @@ export default function MyProjects() {
 
   async function handleMatch(interest) {
     // Create row in matches
-    await supabase.from('matches').insert({
+    const { error: insertError } = await supabase.from('matches').insert({
       project_id:    interest.project_id,
       requester_id:  interest.user_id,
       owner_id:      userId,
     });
-    // Remove from interests
-    await supabase.from('interests').delete().eq('id', interest.id);
+    if (insertError) {
+      console.error('Failed to create match:', insertError);
+      return; // keep the request in the list so the user can retry
+    }
+
+    // Remove from interests. .select() returns the deleted rows, so a delete
+    // silently blocked by RLS (no error, 0 rows) can be detected too.
+    const { data: deleted, error: deleteError } = await supabase
+      .from('interests')
+      .delete()
+      .eq('id', interest.id)
+      .select('id');
+    if (deleteError) {
+      console.error('Match created, but failed to delete interest row:', deleteError);
+    } else if (!deleted || deleted.length === 0) {
+      console.error(
+        `Match created, but interest row ${interest.id} was not deleted (0 rows affected – likely blocked by RLS delete policy on interests).`
+      );
+    }
+
+    // The match exists, so the request is no longer pending either way
     setRequests((prev) => prev.filter((r) => r.id !== interest.id));
     setReqCount((c) => c - 1);
   }
@@ -110,7 +144,10 @@ export default function MyProjects() {
 
   return (
     <div style={s.page}>
-      <h1 style={s.heading}>Projects</h1>
+      <div style={s.headerRow}>
+        <h1 style={s.heading}>Projects</h1>
+        <button style={s.createBtn} onClick={() => navigate('/create')}>+ New project</button>
+      </div>
 
       {/* Tabs */}
       <div style={s.tabs}>
@@ -163,7 +200,7 @@ function ProjectsList({ projects, onDeleted }) {
       <div style={s.empty}>
         <span style={s.emptyIcon}>📁</span>
         <p style={s.emptyTitle}>No projects yet</p>
-        <p style={s.emptyText}>Go to the Create tab to publish your first project.</p>
+        <p style={s.emptyText}>Tap “+ New project” to publish your first project.</p>
       </div>
     );
   }
@@ -337,6 +374,11 @@ const s = {
   },
   muted: { color: '#64748b', fontSize: 15 },
   heading: { margin: 0, fontSize: 22, fontWeight: 700, color: '#f1f5f9' },
+  headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  createBtn: {
+    background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: 20,
+    padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  },
 
   // Tabs
   tabs: { display: 'flex', borderBottom: '2px solid rgba(139,92,246,0.15)', gap: 0 },

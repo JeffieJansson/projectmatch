@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { markChatRead } from '../lib/notificationStore';
 import Avatar from '../components/Avatar';
 
 function formatTime(isoString) {
@@ -46,7 +47,7 @@ export default function Chat() {
           .single();
 
         if (matchError) throw matchError;
-        if (!match) { navigate('/matches'); return; }
+        if (!match) { navigate('/messages'); return; }
 
         const otherId = match.owner_id === user.id ? match.requester_id : match.owner_id;
 
@@ -67,7 +68,7 @@ export default function Chat() {
         if (msgsError) throw msgsError;
 
         setMessages(msgs || []);
-        localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
+        markChatRead(matchId);
       } catch {
         setLoadError('Could not load chat. Check your connection and try again.');
       } finally {
@@ -86,7 +87,7 @@ export default function Chat() {
             if (prev.find((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
-          localStorage.setItem(`chat_last_read_${matchId}`, new Date().toISOString());
+          markChatRead(matchId);
         }
       )
       .subscribe();
@@ -144,7 +145,7 @@ export default function Chat() {
   return (
     <div style={s.page}>
       <div style={s.header}>
-        <button style={s.backBtn} onClick={() => navigate('/matches')}>←</button>
+        <button style={s.backBtn} onClick={() => navigate('/messages')}>←</button>
         <Avatar avatarUrl={other?.avatar_url} name={name} size={38} />
         <div style={s.headerInfo}>
           <span style={s.headerName}>{name}</span>

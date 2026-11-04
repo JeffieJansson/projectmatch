@@ -30,10 +30,12 @@ export default function Explore() {
           (Array.isArray(profile?.roles) ? profile.roles : []).map((r) => r.toLowerCase())
         );
 
-        const { data: seen } = await supabase
-          .from('interests')
+        // Every project the user has swiped on (right or left) is hidden
+        const { data: seen, error: seenError } = await supabase
+          .from('swipes')
           .select('project_id')
           .eq('user_id', user.id);
+        if (seenError) throw seenError;
 
         const seenIds = (seen || []).map((r) => r.project_id);
 
@@ -106,15 +108,29 @@ export default function Explore() {
   }
 
   async function commitSwipe(direction) {
-    if (direction === 'like' && current) {
-      setSaving(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('interests').insert({
+    if (!current || saving) return;
+
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Record the swipe (both directions) so the project never reappears in the feed
+    const { error: swipeError } = await supabase
+      .from('swipes')
+      .upsert(
+        { user_id: user.id, project_id: current.id },
+        { onConflict: 'user_id,project_id', ignoreDuplicates: true }
+      );
+    if (swipeError) console.error('Failed to save swipe:', swipeError);
+
+    // A right swipe also sends an interest request to the project owner
+    if (direction === 'like') {
+      const { error: interestError } = await supabase.from('interests').insert({
         user_id: user.id,
         project_id: current.id,
       });
-      setSaving(false);
+      if (interestError) console.error('Failed to save interest:', interestError);
     }
+    setSaving(false);
 
     // Animate card out
     setOffset({ x: direction === 'like' ? 600 : -600, y: 0 });
